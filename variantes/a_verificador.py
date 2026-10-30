@@ -234,10 +234,11 @@ def mostrar_resultado(r: dict, caso):
 
 
 def main():
-    st.set_page_config(page_title="Variante A", page_icon="🔎")
+    st.set_page_config(page_title="Pausa antes de compartir · Desafío 3", page_icon="🔎")
     cfg = config.panel_config(DEFECTOS)
 
     st.title(cfg["titulo_app"])
+    st.caption("Desafío 3 · Ciudadanía informada · Hackathon IA Aplicada · Congreso Social UC 2026")
     salvaguardas.mostrar_aviso()
 
     equipo = salvaguardas.ingresar_equipo()

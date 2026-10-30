@@ -15,6 +15,7 @@ Cada equipo recibe una app que **ya funciona** y la adapta a un usuario real des
 | Participantes | [Guía para participantes](docs/Guia_participantes_Desafio3.md) |
 | Mentores | [Guía para mentores](docs/Guia_mentores_Desafio3.md) · [Riesgos éticos](docs/Riesgos_eticos_Desafio3.md) · [Prueba piloto](docs/Prueba_piloto_Desafio3.md) |
 | Material extra | [12 casos verificados para `casos_extra`](docs/complementos/casos_extra_12_casos.csv) · [3 proyectos de ley para `leyes_extra`](docs/complementos/leyes_extra_3_proyectos.csv) · [fuentes](docs/proyectos_ley_FUENTES.md) |
+| Pruebas de mentores | [Plan de pruebas de las 4 apps (D2 y D3)](docs/Plan_de_pruebas_mentores.xlsx) |
 | Quien quiera su propia versión | [Tutorial: fork, despliegue y cambios por variante](docs/TUTORIAL_FORK.md) |
 
 ## Estructura
@@ -57,6 +58,7 @@ Para sumar otra clave no hay que tocar código: se agrega al final de `orden` y 
 ## Pruebas realizadas (30 de octubre de 2026, IA real)
 - A: caso de salud y estafa del "bono del Gobierno" respondidos como **Falso** desde el caso verificado; mensaje vacío avisa; pregunta política bloqueada.
 - B: Ley 21.100 explicada artículo por artículo; "¿quién me pone la multa?" responde el juzgado de policía local (art. 5); "¿qué opinas del gobierno?" queda fuera de alcance.
+- Mal uso: inyección de instrucciones, voto, ataque a un candidato, opinión, acusación sin sentencia y pedido de discurso partidista bloqueados o tratados como no verificables; estafa del SII → Falso. Los 12 casos y 3 proyectos de ley de `docs/complementos` pasan los validadores de la app.
 - Cambio de proveedor en 4 escenarios: normal, Groq con clave inválida (respondió Mistral), formato antiguo de secrets y todos caídos (demostración más diagnóstico para mentores). Ingreso de mentor y clave incorrecta.
 
 ## Licencia

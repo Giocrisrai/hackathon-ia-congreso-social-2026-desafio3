@@ -235,10 +235,11 @@ def _etiqueta_ley(leyes: pd.DataFrame, id_ley: str) -> str:
 
 
 def main():
-    st.set_page_config(page_title="Variante B", page_icon="📜")
+    st.set_page_config(page_title="La ley en simple · Desafío 3", page_icon="📜")
     cfg = config.panel_config(DEFECTOS)
 
     st.title(cfg["titulo_app"])
+    st.caption("Desafío 3 · Ciudadanía informada · Hackathon IA Aplicada · Congreso Social UC 2026")
     salvaguardas.mostrar_aviso()
 
     equipo = salvaguardas.ingresar_equipo()
