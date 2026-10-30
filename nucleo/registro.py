@@ -1,7 +1,13 @@
-"""Registro central: envía cada interacción al Google Form de la organización.
+"""Registro de cada interacción.
+- Siempre: copia en memoria de la app, descargable desde la barra lateral (cada equipo ve lo suyo;
+  tutores T00 y mentores M.. ven todo).
+- Si los secrets traen REGISTRO_FORM_URL: además se envía al Google Form de la organización.
 Este módulo es una salvaguarda: los equipos NO deben modificarlo."""
 
+import csv as csv_mod
+import io
 from datetime import datetime
+from threading import Lock
 from zoneinfo import ZoneInfo
 
 import requests
@@ -19,22 +25,56 @@ CAMPOS = {
 
 ZONA_HORARIA = ZoneInfo("America/Santiago")
 LARGO_MAXIMO = 4000  # recorta textos muy largos para no exceder el Form
+MAX_FILAS = 5000     # tope de la copia en memoria
+
+
+@st.cache_resource
+def _memoria():
+    return {"filas": [], "lock": Lock()}
 
 
 def registrar(variante: str, equipo: str, entrada: str, salida: str, modo: str) -> bool:
-    """Envía una fila al registro. Devuelve True si se registró.
+    """Guarda una fila. Devuelve True si se envió al Form.
     Nunca interrumpe la app: si falla, solo avisa en el registro de Streamlit."""
-    datos = {
-        CAMPOS["fecha_hora"]: datetime.now(ZONA_HORARIA).strftime("%Y-%m-%d %H:%M:%S"),
-        CAMPOS["variante"]: variante,
-        CAMPOS["equipo"]: equipo,
-        CAMPOS["entrada"]: str(entrada)[:LARGO_MAXIMO],
-        CAMPOS["salida"]: str(salida)[:LARGO_MAXIMO],
-        CAMPOS["modo"]: modo,
+    fila = {
+        "fecha_hora": datetime.now(ZONA_HORARIA).strftime("%Y-%m-%d %H:%M:%S"),
+        "variante": variante,
+        "equipo": equipo,
+        "entrada": str(entrada)[:LARGO_MAXIMO],
+        "salida": str(salida)[:LARGO_MAXIMO],
+        "modo": modo,
+        "modelo": st.session_state.get("ia_ultimo", "") if modo in ("real", "demo") else "",
     }
+    m = _memoria()
+    with m["lock"]:
+        m["filas"].append(fila)
+        del m["filas"][:-MAX_FILAS]
+
     try:
-        r = requests.post(st.secrets["REGISTRO_FORM_URL"], data=datos, timeout=5)
+        url = st.secrets.get("REGISTRO_FORM_URL")
+    except Exception:
+        url = None
+    if not url:
+        return False
+    try:
+        r = requests.post(url, data={CAMPOS[k]: fila[k] for k in CAMPOS}, timeout=5)
         return r.status_code == 200
     except Exception as e:
         print(f"[registro] fallo al registrar: {e}", flush=True)
         return False
+
+
+def filas(equipo: str) -> list[dict]:
+    todas = list(_memoria()["filas"])
+    if equipo == "T00" or equipo.startswith("M"):
+        return todas
+    return [f for f in todas if f["equipo"] == equipo]
+
+
+def exportar_csv(filas_: list[dict]) -> bytes:
+    buf = io.StringIO()
+    w = csv_mod.DictWriter(buf, fieldnames=["fecha_hora", "variante", "equipo", "entrada", "salida", "modo", "modelo"])
+    w.writeheader()
+    w.writerows(filas_)
+    return buf.getvalue().encode("utf-8-sig")
+

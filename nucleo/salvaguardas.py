@@ -1,8 +1,17 @@
 """Salvaguardas fijas: aviso de IA, ingreso por equipo y cuota de uso.
-Este módulo NO debe ser modificado por los equipos."""
+Este módulo NO debe ser modificado por los equipos.
+
+Equipos en los secrets, en cualquiera de los dos formatos:
+    [equipos]                      [equipos.E01]
+    E01 = "clave"          o       nombre = "Equipo 01"
+                                   clave = "clave"
+Los códigos que empiezan con M son de mentores: tienen cuota propia y ven el diagnóstico de la IA.
+"""
 
 from threading import Lock
 import streamlit as st
+
+from nucleo import llm, registro
 
 AVISO_IA = (
     "⚠️ **Esta herramienta usa inteligencia artificial.** "
@@ -16,9 +25,45 @@ def mostrar_aviso():
     st.info(AVISO_IA)
 
 
+def _equipos() -> dict:
+    """{código: (clave, nombre)} desde los secrets."""
+    try:
+        crudo = st.secrets.get("equipos", {})
+    except Exception:
+        crudo = {}
+    salida = {}
+    for cod, val in dict(crudo).items():
+        if isinstance(val, str):
+            salida[cod.upper()] = (val, cod.upper())
+        elif hasattr(val, "get"):
+            salida[cod.upper()] = (str(val.get("clave", "")), str(val.get("nombre", cod.upper())))
+    return salida
+
+
+def _barra_lateral(equipo: str):
+    with st.sidebar:
+        st.divider()
+        st.markdown(f"**👥 {st.session_state.get('equipo_nombre', equipo)}** · `{equipo}`")
+        enlaces = llm.describir()
+        if enlaces:
+            with st.expander("🤖 IA en uso"):
+                st.caption("Se prueban en este orden; si uno falla, pasa al siguiente.")
+                for e in enlaces:
+                    st.write(f"- {e}")
+        filas = registro.filas(equipo)
+        if filas:
+            st.download_button(f"⬇️ Descargar registro ({len(filas)})", registro.exportar_csv(filas),
+                               file_name=f"registro_{equipo}.csv", mime="text/csv")
+        if st.button("Cerrar sesión"):
+            for k in ("equipo", "equipo_nombre", "ultimo", "ultimo_b"):
+                st.session_state.pop(k, None)
+            st.rerun()
+
+
 def ingresar_equipo() -> str | None:
     """Pide código y clave del equipo. Devuelve el código si es válido."""
     if st.session_state.get("equipo"):
+        _barra_lateral(st.session_state["equipo"])
         return st.session_state["equipo"]
 
     st.subheader("Ingreso del equipo")
@@ -26,12 +71,14 @@ def ingresar_equipo() -> str | None:
     clave = st.text_input("Clave del equipo", type="password").strip()
 
     if st.button("Ingresar"):
-        equipos = st.secrets.get("equipos", {})
-        if codigo in equipos and equipos[codigo] == clave:
+        equipos = _equipos()
+        if codigo in equipos and equipos[codigo][0] == clave:
             st.session_state["equipo"] = codigo
+            st.session_state["equipo_nombre"] = equipos[codigo][1]
             st.rerun()
         else:
             st.error("Código o clave incorrectos.")
+    st.caption("El código y la clave los entrega tu mentor.")
     return None
 
 
@@ -42,7 +89,11 @@ def _contador():
 
 
 def _limite() -> int:
-    return int(st.secrets.get("CUOTA_POR_EQUIPO", 120))
+    try:
+        ia = st.secrets.get("ia", {})
+        return int(st.secrets.get("CUOTA_POR_EQUIPO", ia.get("limite_consultas_por_equipo", 120)))
+    except Exception:
+        return 120
 
 
 def consumir_cuota(equipo: str) -> bool:
