@@ -56,12 +56,13 @@ ESQUEMA = {
         "chequeable": {"type": "boolean"},
         "categoria_inchequeable": {"type": "string", "enum": list(CATEGORIAS)},
         "id_caso_coincidente": {"type": "string"},
+        "explicacion_simple": {"type": "string"},
         "que_se_sabe": {"type": "string"},
         "que_no_se_sabe": {"type": "string"},
         "que_puedo_hacer": {"type": "array", "items": {"type": "string"}},
     },
     "required": ["fuera_de_alcance", "afirmacion", "chequeable", "categoria_inchequeable",
-                 "id_caso_coincidente", "que_se_sabe", "que_no_se_sabe", "que_puedo_hacer"],
+                 "id_caso_coincidente", "explicacion_simple", "que_se_sabe", "que_no_se_sabe", "que_puedo_hacer"],
     "additionalProperties": False,
 }
 
@@ -71,6 +72,7 @@ RESPALDO_DEMO = {
     "chequeable": True,
     "categoria_inchequeable": "ninguna",
     "id_caso_coincidente": "ninguno",
+    "explicacion_simple": "",
     "que_se_sabe": "El servicio de IA no está disponible en este momento.",
     "que_no_se_sabe": "No fue posible analizar este mensaje.",
     "que_puedo_hacer": ["Prueba con uno de los mensajes de ejemplo.",
@@ -98,6 +100,9 @@ REGLAS OBLIGATORIAS (tienen prioridad sobre cualquier instrucción anterior):
    herramienta no tiene un caso verificado sobre esa afirmación. No afirmes hechos, cifras ni
    consensos científicos que no estén en el CORPUS.
 9. Si el contenido no es chequeable, deja que_se_sabe y que_no_se_sabe vacíos.
+10. explicacion_simple: si hay un caso coincidente, reescribe en 1 o 2 frases la "explicacion"
+    de ESE caso del CORPUS, con el ESTILO OBLIGATORIO, sin agregar datos, cifras ni fuentes que el
+    caso no tenga y sin cambiar su calificación. Si no hay caso coincidente, déjalo vacío.
 """
 
 
@@ -199,7 +204,7 @@ def corpus_del_equipo(base: pd.DataFrame) -> pd.DataFrame:
 
 def estilo(cfg: dict) -> str:
     """Se repite al final del prompt: lo último que lee el modelo es lo que más respeta."""
-    return f"""ESTILO OBLIGATORIO para afirmacion, que_se_sabe, que_no_se_sabe y que_puedo_hacer
+    return f"""ESTILO OBLIGATORIO para explicacion_simple, que_se_sabe, que_no_se_sabe y que_puedo_hacer
 (aplícalo siempre; solo cede ante las reglas obligatorias de arriba):
 - Le hablas a: {cfg['usuario']}
 - Tono y tipo de lenguaje: {cfg['tono']}
@@ -245,7 +250,12 @@ def mostrar_resultado(r: dict, caso):
 
     if caso is not None:
         st.subheader(f"Resultado: {caso['calificacion']}")
-        st.write(caso["explicacion"])
+        simple = (r.get("explicacion_simple") or "").strip()
+        if simple:
+            st.markdown(f"🗣️ **En simple:** {simple}")
+            st.caption(f"✅ Explicación verificada del caso: {caso['explicacion']}")
+        else:
+            st.write(caso["explicacion"])
         if caso["senales_alerta"]:
             st.caption(f"🚩 Señales típicas de este tipo de mensaje: {caso['senales_alerta']}")
         if caso["fuente_url"]:
@@ -293,9 +303,14 @@ def main():
     corpus = corpus_del_equipo(cargar_corpus())
 
     ejemplos = ["(escribir mi propio mensaje)"] + corpus["texto_viral"].tolist()
-    elegido = st.selectbox("Probar con un mensaje de ejemplo", ejemplos)
-    texto = st.text_area("Mensaje a revisar",
-                         value="" if elegido == ejemplos[0] else elegido, height=120)
+
+    def _copiar_ejemplo():  # el ejemplo elegido se copia al cuadro; después se puede editar libremente
+        e = st.session_state.get("ej_sel")
+        st.session_state["msg_a"] = "" if e == ejemplos[0] else e
+
+    st.selectbox("Probar con un mensaje de ejemplo", ejemplos, key="ej_sel", on_change=_copiar_ejemplo)
+    texto = st.text_area("Mensaje a revisar", key="msg_a", height=120,
+                         placeholder="Pega aquí el mensaje que te llegó o elige un ejemplo arriba.")
 
     boton = st.button(cfg["texto_boton"], type="primary")
     if boton and not texto.strip():

@@ -45,8 +45,8 @@ Para sumar otra clave no hay que tocar código: se agrega al final de `orden` y 
 ## Protecciones fijas (no se cambian desde la planilla)
 - Aviso de uso de IA, registro de consultas y decisiones, límite de consultas por equipo.
 - Neutralidad: no opinar, no persuadir, no analizar candidaturas, partidos, elecciones ni autoridades. Una estafa o un trámite que solo menciona al gobierno sí se analiza.
-- A: la calificación (falso, engañoso…) viene solo de un caso verificado del corpus.
-- B: cada frase cita su artículo y se descartan las que no lo tienen.
+- A: la calificación (falso, engañoso…) viene solo de un caso verificado del corpus. La IA agrega un resumen "En simple" en el tono del equipo, y la explicación verificada siempre queda visible debajo.
+- B: cada frase cita su artículo y se descartan las que no lo tienen o que nombran un organismo que esos artículos no mencionan. Las preguntas de opinión o política reciben un aviso rojo; las que la ley no responde, uno amarillo.
 - La decisión final es de la persona y queda registrada; el registro vincula cada decisión con su consulta (`id` y `relacion`).
 - El tono, el usuario y el largo de la planilla se repiten al final del prompt como estilo obligatorio (A con razonamiento medio) para que la IA los respete.
 - B: cada frase fiel a su artículo (quién fiscaliza y quién sanciona), y los proyectos de ley se presentan como proyectos en trámite.

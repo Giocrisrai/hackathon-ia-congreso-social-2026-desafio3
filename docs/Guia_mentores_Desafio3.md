@@ -28,6 +28,7 @@ Plantillas: **"Pausa antes de compartir"** (A) y **"La ley en simple"** (B), asi
 ## Preguntas típicas de los equipos
 - **¿Podemos cambiar el prompt?** No completo: las reglas de neutralidad son fijas. Sí pueden cambiar usuario, tono, largo, ejemplos, instrucciones extra y los textos de la pantalla.
 - **¿Podemos agregar otra ley?** Sí, en `leyes_extra`, con el texto literal copiado de la fuente oficial. Si no está completa, deben marcar "artículos seleccionados".
+- **¿Por qué el tono no cambia la explicación del caso?** La explicación verificada se muestra tal cual; el tono se aplica al resumen "En simple" y a lo que escribe la IA. Si quieren otra explicación, la escriben en `casos_extra`.
 - **¿Por qué la herramienta no dice "es falso"?** Porque la calificación solo puede venir de un caso verificado, nunca de la IA, y la decisión final es de la persona.
 - **¿Cuántas consultas tenemos?** 120 por equipo; la barra lateral y el pie de la app muestran cuántas quedan.
 - **¿Qué modelo usamos?** Aparece bajo cada respuesta ("Respondió…"); va en la declaración de transparencia.
