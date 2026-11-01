@@ -41,6 +41,8 @@ PROVEEDORES = {
 }
 PAUSA_SATURADO, PAUSA_INVALIDO = 45, 600  # segundos que se salta un modelo saturado (429) o con clave/modelo inválido
 TIMEOUT = 40
+TEMPERATURA = 0.2  # baja: la misma consulta debe dar respuestas consistentes
+RAZONAMIENTO = "low"  # esfuerzo de razonamiento de los modelos gpt-oss
 
 
 def _secreto(clave, defecto=None):
@@ -127,13 +129,14 @@ def _extraer_json(texto: str) -> dict:
         raise ValueError("la respuesta no trae JSON")
 
 
-def _llamar(e, sistema, usuario, esquema, nombre_esquema) -> dict:
-    extra = {"reasoning_effort": "low"} if "gpt-oss" in e["modelo"] else {}
+def _llamar(e, sistema, usuario, esquema, nombre_esquema, razonamiento=None) -> dict:
+    extra = {"reasoning_effort": razonamiento or RAZONAMIENTO} if "gpt-oss" in e["modelo"] else {}
     mensajes = [{"role": "system", "content": sistema}, {"role": "user", "content": usuario}]
     formato = {"type": "json_schema", "json_schema": {"name": nombre_esquema, "schema": esquema, "strict": True}}
     try:
         r = _cliente(e["url"], e["clave"]).chat.completions.create(
-            model=e["modelo"], messages=mensajes, response_format=formato, extra_body=extra or None)
+            model=e["modelo"], messages=mensajes, response_format=formato, temperature=TEMPERATURA,
+            extra_body=extra or None)
     except BadRequestError as err:
         if "response_format" not in str(err) and "schema" not in str(err).lower():
             raise
@@ -141,7 +144,8 @@ def _llamar(e, sistema, usuario, esquema, nombre_esquema) -> dict:
         mensajes[0]["content"] += ("\n\nResponde SOLO con un objeto JSON válido que cumpla este esquema:\n"
                                    + json.dumps(esquema, ensure_ascii=False))
         r = _cliente(e["url"], e["clave"]).chat.completions.create(
-            model=e["modelo"], messages=mensajes, response_format={"type": "json_object"}, extra_body=extra or None)
+            model=e["modelo"], messages=mensajes, response_format={"type": "json_object"},
+            temperature=TEMPERATURA, extra_body=extra or None)
     datos = _extraer_json(r.choices[0].message.content)
     faltan = [c for c in esquema.get("required", []) if c not in datos]
     if faltan:
@@ -150,8 +154,9 @@ def _llamar(e, sistema, usuario, esquema, nombre_esquema) -> dict:
 
 
 def consultar(sistema: str, usuario: str, esquema: dict, nombre_esquema: str,
-              variante: str, clave_demo: str, respaldo_demo: dict) -> tuple[dict, str]:
-    """Devuelve SIEMPRE (respuesta, modo). modo = 'real' o 'demo'."""
+              variante: str, clave_demo: str, respaldo_demo: dict, razonamiento: str | None = None) -> tuple[dict, str]:
+    """Devuelve SIEMPRE (respuesta, modo). modo = 'real' o 'demo'.
+    razonamiento: esfuerzo de los modelos gpt-oss ("low" o "medium"); más alto sigue mejor el tono pero gasta más."""
 
     # Modo demo forzado desde los secrets (contingencia manual)
     if str(_secreto("MODO_DEMO", "no")).lower() == "si":
@@ -167,7 +172,7 @@ def consultar(sistema: str, usuario: str, esquema: dict, nombre_esquema: str,
     for e in [x for x in eslabones if not _pausado(x)] or eslabones:
         t0 = time.time()
         try:
-            datos = _llamar(e, sistema, usuario, esquema, nombre_esquema)
+            datos = _llamar(e, sistema, usuario, esquema, nombre_esquema, razonamiento)
             seg = round(time.time() - t0, 1)
             st.session_state["ia_ultimo"] = f"{e['proveedor']} · {e['modelo']}"
             st.caption(f"🤖 Respondió {e['proveedor']} · {e['modelo'].split('/')[-1]} · {seg} s")

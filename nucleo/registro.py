@@ -6,6 +6,7 @@ Este módulo es una salvaguarda: los equipos NO deben modificarlo."""
 
 import csv as csv_mod
 import io
+import uuid
 from datetime import datetime
 from threading import Lock
 from zoneinfo import ZoneInfo
@@ -33,10 +34,13 @@ def _memoria():
     return {"filas": [], "lock": Lock()}
 
 
-def registrar(variante: str, equipo: str, entrada: str, salida: str, modo: str) -> bool:
-    """Guarda una fila. Devuelve True si se envió al Form.
+def registrar(variante: str, equipo: str, entrada: str, salida: str, modo: str, relacion: str = "") -> str:
+    """Guarda una fila y devuelve su id (para vincular la decisión con su consulta en `relacion`).
+    Si hay Google Form, también la envía.
     Nunca interrumpe la app: si falla, solo avisa en el registro de Streamlit."""
     fila = {
+        "id": uuid.uuid4().hex[:8],
+        "relacion": relacion,
         "fecha_hora": datetime.now(ZONA_HORARIA).strftime("%Y-%m-%d %H:%M:%S"),
         "variante": variante,
         "equipo": equipo,
@@ -54,14 +58,12 @@ def registrar(variante: str, equipo: str, entrada: str, salida: str, modo: str) 
         url = st.secrets.get("REGISTRO_FORM_URL")
     except Exception:
         url = None
-    if not url:
-        return False
-    try:
-        r = requests.post(url, data={CAMPOS[k]: fila[k] for k in CAMPOS}, timeout=5)
-        return r.status_code == 200
-    except Exception as e:
-        print(f"[registro] fallo al registrar: {e}", flush=True)
-        return False
+    if url:
+        try:
+            requests.post(url, data={CAMPOS[k]: fila[k] for k in CAMPOS}, timeout=5)
+        except Exception as e:
+            print(f"[registro] fallo al registrar: {e}", flush=True)
+    return fila["id"]
 
 
 def filas(equipo: str) -> list[dict]:
@@ -73,7 +75,7 @@ def filas(equipo: str) -> list[dict]:
 
 def exportar_csv(filas_: list[dict]) -> bytes:
     buf = io.StringIO()
-    w = csv_mod.DictWriter(buf, fieldnames=["fecha_hora", "variante", "equipo", "entrada", "salida", "modo", "modelo"])
+    w = csv_mod.DictWriter(buf, fieldnames=["id", "relacion", "fecha_hora", "variante", "equipo", "entrada", "salida", "modo", "modelo"])
     w.writeheader()
     w.writerows(filas_)
     return buf.getvalue().encode("utf-8-sig")

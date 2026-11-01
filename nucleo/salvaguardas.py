@@ -8,6 +8,7 @@ Equipos en los secrets, en cualquiera de los dos formatos:
 Los códigos que empiezan con M son de mentores: tienen cuota propia y ven el diagnóstico de la IA.
 """
 
+import time
 from threading import Lock
 import streamlit as st
 
@@ -50,10 +51,8 @@ def _barra_lateral(equipo: str):
                 st.caption("Se prueban en este orden; si uno falla, pasa al siguiente.")
                 for e in enlaces:
                     st.write(f"- {e}")
-        filas = registro.filas(equipo)
-        if filas:
-            st.download_button(f"⬇️ Descargar registro ({len(filas)})", registro.exportar_csv(filas),
-                               file_name=f"registro_{equipo}.csv", mime="text/csv")
+        # El botón del registro se llena al final de la página (pie), cuando ya quedó registrada la última acción
+        st.session_state["_ph_registro"] = st.empty()
         if st.button("Cerrar sesión"):
             for k in ("equipo", "equipo_nombre", "ultimo", "ultimo_b"):
                 st.session_state.pop(k, None)
@@ -109,3 +108,29 @@ def consumir_cuota(equipo: str) -> bool:
 
 def cuota_restante(equipo: str) -> int:
     return max(_limite() - _contador()["usos"].get(equipo, 0), 0)
+
+
+def _es_mentor(equipo: str) -> bool:
+    return equipo == "T00" or equipo.startswith("M")
+
+
+def pie(equipo: str):
+    """Al final de la página: consultas restantes y registro descargable, ya actualizados."""
+    quien = "de tu código de mentor" if _es_mentor(equipo) else "del equipo"
+    st.caption(f"Consultas restantes {quien}: {cuota_restante(equipo)} de {_limite()}")
+    ph = st.session_state.get("_ph_registro")
+    filas = registro.filas(equipo)
+    if ph is not None and filas:
+        ph.download_button(f"⬇️ Descargar registro ({len(filas)})", registro.exportar_csv(filas),
+                           file_name=f"registro_{equipo}.csv", mime="text/csv")
+
+
+def es_repeticion(firma: str, segundos: int = 20) -> bool:
+    """True si es la misma consulta que se acaba de hacer (doble clic o Enter + clic):
+    así no se gasta otra consulta ni se registra dos veces."""
+    ultima = st.session_state.get("_ultima_consulta")
+    ahora = time.time()
+    if ultima and ultima[0] == firma and ahora - ultima[1] < segundos:
+        return True
+    st.session_state["_ultima_consulta"] = (firma, ahora)
+    return False

@@ -47,7 +47,10 @@ Para sumar otra clave no hay que tocar código: se agrega al final de `orden` y 
 - Neutralidad: no opinar, no persuadir, no analizar candidaturas, partidos, elecciones ni autoridades. Una estafa o un trámite que solo menciona al gobierno sí se analiza.
 - A: la calificación (falso, engañoso…) viene solo de un caso verificado del corpus.
 - B: cada frase cita su artículo y se descartan las que no lo tienen.
-- La decisión final es de la persona y queda registrada.
+- La decisión final es de la persona y queda registrada; el registro vincula cada decisión con su consulta (`id` y `relacion`).
+- El tono, el usuario y el largo de la planilla se repiten al final del prompt como estilo obligatorio (A con razonamiento medio) para que la IA los respete.
+- B: cada frase fiel a su artículo (quién fiscaliza y quién sanciona), y los proyectos de ley se presentan como proyectos en trámite.
+- Logos de las instituciones organizadoras (Pontificia Universidad Católica de Chile y Duoc UC) en el encabezado.
 
 ## Despliegue (organización)
 1. En https://share.streamlit.io, crear dos apps desde este repositorio, rama `main`, Python 3.12, con *Main file* `app_a.py` y `app_b.py`.

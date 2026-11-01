@@ -40,4 +40,4 @@ Plantillas: **"Pausa antes de compartir"** (A) y **"La ley en simple"** (B), asi
 5. **A las 14:15 h sin demo estable:** congelar lo que funciona y grabar un video de respaldo.
 
 ## Para el pitch (16:15 a 18:15 h)
-Mostrar la versión del equipo funcionando con documentos o casos verificados, qué cambiaron respecto de la plantilla y cómo medirían si ayuda a su usuario. Preparen versiones de 3 y 5 minutos hasta que se confirme el formato. El jurado preguntará cómo se podría usar mal: "¿Cómo evitan que alguien produzca explicaciones sesgadas con apariencia de neutralidad?" y "¿Qué pasa si la persona confía ciegamente en la herramienta?"
+Mostrar la versión del equipo funcionando con documentos o casos verificados, qué cambiaron respecto de la plantilla y cómo medirían si ayuda a su usuario. Formato según las bases: 5 minutos de pitch con demo y 3 de preguntas; se evalúa la versión congelada a las 14:45 h. El jurado preguntará cómo se podría usar mal: "¿Cómo evitan que alguien produzca explicaciones sesgadas con apariencia de neutralidad?" y "¿Qué pasa si la persona confía ciegamente en la herramienta?"

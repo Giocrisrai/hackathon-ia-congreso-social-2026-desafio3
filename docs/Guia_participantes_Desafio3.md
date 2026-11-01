@@ -63,7 +63,7 @@ Cuiden sus `ejemplos`: la IA los imita. Si un ejemplo tiene un error o "declara"
 Si nada funciona y queda poco tiempo, borren la URL de la planilla de la barra lateral y presenten con la plantilla base.
 
 ## Entregables y pitch
-Antes de las **14:45 h** entreguen la **declaración de transparencia** (qué modelos usaron —aparece bajo cada respuesta— y qué cambiaron respecto de la plantilla) y el **checklist ético** completo. A las 14:15 h congelen lo que funciona y graben un video de respaldo. Los pitch son entre las **16:15 y las 18:15 h**; preparen una versión de 3 minutos y otra de 5.
+Antes de las **14:45 h** entreguen la **declaración de transparencia** (qué modelos usaron —aparece bajo cada respuesta— y qué cambiaron respecto de la plantilla) y el **checklist ético** completo. A las 14:15 h congelen lo que funciona y graben un video de respaldo. Pitch entre las **16:15 y las 18:15 h**: **5 minutos de pitch con demo y 3 de preguntas del jurado**. Se evalúa la versión congelada al **cierre técnico (14:45 h)**: lo que cambien después no cuenta.
 
 En la demo usen **solo casos o leyes precargados y verificados**, con la fuente en pantalla.
 
