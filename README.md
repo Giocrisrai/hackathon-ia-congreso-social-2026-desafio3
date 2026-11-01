@@ -53,7 +53,7 @@ Para sumar otra clave no hay que tocar código: se agrega al final de `orden` y 
 1. En https://share.streamlit.io, crear dos apps desde este repositorio, rama `main`, Python 3.12, con *Main file* `app_a.py` y `app_b.py`.
 2. En cada app, **Settings → Secrets**: pegar `.streamlit/secrets.example.toml` con las claves de IA, un bloque `[equipos.EXX]` (nombre y clave) por equipo y uno `[equipos.MXX]` por mentor. Los códigos `MXX` tienen cuota propia y, si la IA falla, ven el diagnóstico.
 3. Entregar a cada equipo su código y clave y el enlace a la planilla base de su variante.
-4. Abrir las apps antes de cada jornada: se duermen tras 12 horas sin uso. El registro queda en la memoria de la app (se descarga desde la barra lateral) y, si se configura `REGISTRO_FORM_URL`, también en el Google Form.
+4. Las apps se duermen sin visitas. La tarea [Mantener apps despiertas](https://github.com/Giocrisrai/hackathon-ia-congreso-social-2026-desafio2/actions/workflows/mantener_apps_despiertas.yml) (GitHub Actions, en el repositorio del D2) visita las 4 apps cada 4 horas y las despierta; igual conviene abrirlas antes de cada jornada. No subir cambios a `main` durante la jornada: cada cambio reinicia la app y reinicia los contadores de consultas. El registro queda en la memoria de la app (se descarga desde la barra lateral) y, si se configura `REGISTRO_FORM_URL`, también en el Google Form.
 
 ## Pruebas realizadas (30 de octubre de 2026, IA real)
 - A: caso de salud y estafa del "bono del Gobierno" respondidos como **Falso** desde el caso verificado; mensaje vacío avisa; pregunta política bloqueada.
