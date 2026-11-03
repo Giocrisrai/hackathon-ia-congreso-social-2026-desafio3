@@ -24,6 +24,8 @@ La herramienta es **neutral por diseño**: no opina, no persuade y no habla de c
 5. Prueben primero con la plantilla base: en A, un mensaje de ejemplo y uno escrito por ustedes; en B, una ley sin pregunta y luego con una pregunta concreta.
 6. Desde ahí, cada cambio es: editar la planilla → "Recargar configuración" → probar **el mismo caso** para comparar.
 
+Para pedir un tono o un trato, escríbanlo claro en `tono` o en `instrucciones_extra` (por ejemplo: "Directo y cercano, frases cortas. Trata de 'hermano'") y escriban sus `ejemplos` en ese mismo tono: la IA imita los ejemplos. Cuando el estilo se aplica, bajo la respuesta aparece "🎨 Respuesta escrita con el estilo de tu equipo".
+
 En la pestaña `config` editan solo la columna **valor**: a quién le habla la IA (`usuario`), su tono, el largo, 1 a 3 ejemplos de respuesta ideal, reglas propias (`instrucciones_extra`) y los textos de la pantalla.
 
 ## Las dos variantes

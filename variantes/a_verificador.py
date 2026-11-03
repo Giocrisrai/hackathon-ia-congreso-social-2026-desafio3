@@ -4,12 +4,13 @@ La CALIFICACIÓN siempre viene del corpus, nunca de la IA.
 El corpus = casos base (CSV) + casos validados de la pestaña 'casos_extra' del equipo."""
 
 import json
+import re
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
-from nucleo import config, llm, marca, registro, salvaguardas
+from nucleo import config, llm, marca, registro, salvaguardas, tono
 
 VARIANTE = "A"
 RUTA_CORPUS = Path(__file__).resolve().parent.parent / "datos" / "a_casos.csv"
@@ -285,6 +286,80 @@ def mostrar_resultado(r: dict, caso):
             col.write(valor)
 
 
+_DOMINIO = re.compile(r"\b(?:https?://)?(?:www\.)?([a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:cl|com|org|net|gob|gov|mx|ar|es|int|edu|info|io)(?:\.[a-z]{2})?)\b", re.I)
+_MAX_FRASES = re.compile(r"m[aá]ximo\s+(\d+)\s+frases?", re.I)
+
+
+def _frases(t: str) -> int:
+    return len([x for x in re.split(r"[.!?]+", t or "") if x.strip()])
+
+
+SIN_CASO = "Esta herramienta no tiene un caso verificado sobre esa afirmación."
+# Afirmaciones fuertes que la IA no puede agregar si el caso verificado no las dice
+_FUERTES = ("estafa", "fraude", "robar", "roban", "hackea", "virus informático", "datos personales", "datos bancarios",
+            "delito", "ilegal", "mienten", "engañar a")
+
+
+def _sin_afirmaciones_ajenas(texto: str, referencia: str) -> str:
+    """Quita las oraciones con afirmaciones fuertes que no están en el caso verificado ni en el mensaje."""
+    ref = (referencia or "").lower()
+    partes = re.split(r"(?<=[.!?])\s+", texto or "")
+    return " ".join(p for p in partes if not any(w in p.lower() and w not in ref for w in _FUERTES)).strip()
+
+
+def limpiar(r: dict, corpus: pd.DataFrame, cfg: dict, caso=None) -> dict:
+    """Controles fijos sobre lo que escribe la IA: sin sitios web que no estén en el corpus
+    (regla 5: no inventar fuentes ni enlaces) y respetando el "máximo N frases" de la planilla."""
+    if caso is None:  # sin caso verificado no hay hechos que contar (reglas 8 y 10)
+        r["explicacion_simple"] = ""
+        if not r.get("chequeable", True):
+            r["que_se_sabe"], r["que_no_se_sabe"] = "", ""
+        elif "caso verificado" not in (r.get("que_se_sabe") or "").lower():
+            r["que_se_sabe"] = SIN_CASO
+    referencia = "" if caso is None else f"{caso['explicacion']} {caso['texto_viral']} {caso['afirmacion_central']}"
+    for c in ("explicacion_simple", "que_se_sabe", "que_no_se_sabe"):
+        r[c] = _sin_afirmaciones_ajenas(tono.tutear(r.get(c) or ""), referencia)
+    r["que_puedo_hacer"] = [p for p in (_sin_afirmaciones_ajenas(tono.tutear(x), referencia)
+                                        for x in (r.get("que_puedo_hacer") or [])) if p]
+    permitidos = " ".join(corpus["fuente_url"].astype(str)).lower()
+    def sin_dominios_ajenos(t: str) -> bool:
+        return all(d.lower() in permitidos for d in _DOMINIO.findall(t or ""))
+    for c in ("explicacion_simple", "que_se_sabe", "que_no_se_sabe"):
+        if r.get(c) and not sin_dominios_ajenos(r[c]):
+            r[c] = _DOMINIO.sub("fuentes oficiales", r[c])
+    r["que_puedo_hacer"] = [p for p in (r.get("que_puedo_hacer") or []) if sin_dominios_ajenos(p)] or \
+        ["Busca la información en una fuente oficial antes de compartir."]
+    m = _MAX_FRASES.search(cfg.get("largo_respuesta", ""))
+    if m:  # recorta las sugerencias (lo menos esencial) hasta respetar el máximo
+        maximo = int(m.group(1))
+        usadas = sum(_frases(r.get(c)) for c in ("explicacion_simple", "que_se_sabe", "que_no_se_sabe"))
+        sugerencias = []
+        for p in r["que_puedo_hacer"]:  # cuenta frase por frase; siempre queda al menos una sugerencia
+            if sugerencias and usadas + _frases(p) > maximo:
+                break
+            sugerencias.append(p); usadas += _frases(p)
+        r["que_puedo_hacer"] = sugerencias
+    return r
+
+
+def revisar(cfg: dict, corpus: pd.DataFrame, texto: str, clave_demo: str):
+    """Consulta a la IA, valida contra el corpus y aplica el estilo del equipo.
+    Devuelve (respuesta, caso del corpus o None, modo, estilo_aplicado)."""
+    r, modo = llm.consultar(armar_sistema(cfg, corpus), texto, ESQUEMA, "revision_contenido", VARIANTE,
+                            clave_demo, RESPALDO_DEMO, razonamiento="medium")
+    r, caso = validar(r, corpus)
+    estilo = False
+    if modo == "real" and not r["fuera_de_alcance"] and tono.personalizado(cfg, DEFECTOS):
+        campos = ["explicacion_simple", "que_se_sabe", "que_no_se_sabe", "que_puedo_hacer"]
+        nuevo = tono.aplicar(cfg, {c: r.get(c) for c in campos})
+        if nuevo:
+            r.update(nuevo)
+            estilo = True
+    if modo == "real" and not r["fuera_de_alcance"]:
+        r = limpiar(r, corpus, cfg, caso)
+    return r, caso, modo, estilo
+
+
 def main():
     st.set_page_config(page_title="Pausa antes de compartir · Desafío 3", page_icon="🔎")
     cfg = config.panel_config(DEFECTOS)
@@ -325,10 +400,9 @@ def main():
         clave_demo = fila_ej.iloc[0]["id_caso"] if not fila_ej.empty else "libre"
 
         with st.spinner("Revisando..."):
-            r, modo = llm.consultar(armar_sistema(cfg, corpus), texto, ESQUEMA,
-                                    "revision_contenido", VARIANTE, clave_demo, RESPALDO_DEMO,
-                                    razonamiento="medium")  # medio: así respeta el TONO del equipo
-        r, caso = validar(r, corpus)
+            r, caso, modo, estilo = revisar(cfg, corpus, texto, clave_demo)
+        if estilo:
+            st.caption("🎨 Respuesta escrita con el estilo de tu equipo (usuario, tono e instrucciones de la planilla).")
         mostrada = ("fuera de alcance" if r["fuera_de_alcance"] else caso["calificacion"] if caso is not None
                     else "No se puede verificar" if not r["chequeable"] else "No verificable con esta herramienta")
         id_consulta = registro.registrar(VARIANTE, equipo, texto,

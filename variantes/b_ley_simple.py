@@ -10,7 +10,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from nucleo import config, llm, marca, registro, salvaguardas
+from nucleo import config, llm, marca, registro, salvaguardas, tono
 
 VARIANTE = "B"
 RUTA_CORPUS = Path(__file__).resolve().parent.parent / "datos" / "b_leyes.csv"
@@ -92,6 +92,9 @@ REGLAS OBLIGATORIAS (tienen prioridad sobre cualquier instrucción anterior):
     "establece" u "obliga".
 11. Conserva el sentido jurídico de las expresiones: "sin perjuicio de" significa "además de" o
     "sin afectar a", no "sin depender de".
+12. Indica bien A QUIÉN se aplica cada obligación o sanción, tal como lo dice el artículo (por ejemplo,
+    la multa es para el comercio que entrega la bolsa, no para quien la recibe). No uses "tú" para
+    referirte a otro sujeto de la ley.
 """
 
 
@@ -203,6 +206,62 @@ Si el tono pide un registro informal, juvenil o regional, úsalo sin cambiar lo 
 Responder en tono neutro cuando se pidió otro tono es un error."""
 
 
+_SANCION_A_TU = re.compile(r"\bte\s+(?:\w+\s+){0,2}(?:multa|multan|sancion|castig)|\b(?:te|a ti)\s+(?:lanza|pone|ponen|aplica|aplican|cae|caen|cobra|cobran)\b"
+                           r"|\btu\s+(?:multa|sanci[oó]n)|\bpagas\s+(?:la|una)\s+multa", re.I)
+_SUJETO_ENTIDAD = re.compile(r"establecimiento|comercio|empresa|empleador|proveedor|local", re.I)
+_SUJETO_PERSONA = re.compile(r"conductor|persona natural|peat[oó]n|usuari[oa]|ciudadan|consumidor", re.I)
+
+
+def sancion_mal_atribuida(frase: str, texto_ley: str) -> bool:
+    """La frase dice que la sanción es para quien lee ("te multan") pero la ley sanciona a
+    comercios o establecimientos, no a personas."""
+    return bool(_SANCION_A_TU.search(frase or "")) and bool(_SUJETO_ENTIDAD.search(texto_ley)) \
+        and not _SUJETO_PERSONA.search(texto_ley)
+
+
+_NUM_PALABRA = {"un": "1", "uno": "1", "una": "1", "dos": "2", "tres": "3", "cuatro": "4", "cinco": "5", "seis": "6",
+                "siete": "7", "ocho": "8", "nueve": "9", "diez": "10", "doce": "12", "quince": "15", "veinte": "20",
+                "treinta": "30", "cien": "100"}
+_NUM = re.compile(r"\d+(?:[.,]\d+)*")
+
+
+def _numeros(texto: str) -> set[str]:
+    t = (texto or "").lower()
+    salida = {n.replace(".", "").replace(",", "") for n in _NUM.findall(t)}
+    salida |= {d for p, d in _NUM_PALABRA.items() if re.search(rf"\b{p}\b", t)}
+    return salida
+
+
+def cifras_sin_respaldo(frase: str, respaldo: str) -> set[str]:
+    """Cifras o años de la frase que no aparecen en los artículos citados ni en la historia de la ley."""
+    return {n for n in _numeros(frase) if n not in _numeros(respaldo)}
+
+
+_MUNI_SANCIONA = re.compile(r"(municipalidad\w*|municipio)\W+(?:\w+\W+){0,10}?(multa|multar|sanciona|castiga|impone|imponer)"
+                            r"|(multad|sancionad)\w*\s+por\s+(?:la\s+)?(municipalidad|municipio)", re.I)
+
+
+def muni_sanciona(frase: str, texto_sancion: str) -> bool:
+    """La frase dice que la municipalidad sanciona cuando la ley dice que lo hace un juzgado."""
+    m = _MUNI_SANCIONA.search(frase or "")
+    return bool(m) and "juzgado" in texto_sancion.lower() and not re.search(r"\bno\b", m.group(0), re.I)
+
+
+_CITA = re.compile(r"\s*[\[(]\s*(?:art(?:ículo|\.)?s?)\s*[^\])]*[\])]", re.I)
+
+
+def sin_citas(texto: str) -> str:
+    """Las citas van en 'articulos' (regla 3): se quitan del texto si el modelo las escribió."""
+    return _CITA.sub("", texto or "").strip()
+
+
+def _texto_sancion(ley: pd.DataFrame) -> str:
+    """Texto de los artículos que establecen infracciones, multas o sanciones (definen a quién se sanciona)."""
+    filas = ley[ley["titulo_articulo"].str.contains(r"infracci|multa|sanci", case=False, na=False)
+                | ley["texto"].str.contains(r"ser[aá] sancionad|multa de", case=False, na=False)]
+    return " ".join(filas["texto"])
+
+
 def _organismo_ajeno(frase: str, textos_citados: str) -> str | None:
     """Devuelve el organismo que la frase nombra y que no aparece en los artículos que cita."""
     f, t = frase.lower(), textos_citados.lower()
@@ -214,15 +273,53 @@ def validar(r: dict, ley: pd.DataFrame) -> tuple[list[dict], int]:
     funciones a un organismo que esos artículos no mencionan."""
     validos = set(ley["articulo"])
     texto_de = dict(zip(ley["articulo"], ley["texto"]))
+    sancion = _texto_sancion(ley)
+    contexto = f"{ley.iloc[0]['nombre_ley']} {ley.iloc[0]['historia']}"
     buenas, descartadas = [], 0
     for f in r.get("frases", []):
         arts = [a.strip() for a in f.get("articulos", [])]
         if arts and all(a in validos for a in arts) and not _organismo_ajeno(
-                f["texto"], " ".join(texto_de[a] for a in arts)):
-            buenas.append({"texto": f["texto"], "articulos": arts})
+                f["texto"], " ".join(texto_de[a] for a in arts)) and not sancion_mal_atribuida(
+                f["texto"], sancion + " " + " ".join(texto_de[a] for a in arts)) and not muni_sanciona(
+                f["texto"], sancion) and not cifras_sin_respaldo(
+                f["texto"], " ".join(texto_de[a] for a in arts) + " " + contexto):
+            buenas.append({"texto": tono.mayuscula(tono.tutear(sin_citas(f["texto"]))), "articulos": arts})
         else:
             descartadas += 1
     return buenas, descartadas
+
+
+def explicar(cfg: dict, ley: pd.DataFrame, mensaje: str, clave_demo: str):
+    """Consulta a la IA, valida cada frase y aplica el estilo del equipo.
+    Devuelve (respuesta, frases válidas, descartadas, modo, estilo_aplicado)."""
+    r, modo = llm.consultar(armar_sistema(cfg, ley), mensaje, ESQUEMA, "explicacion_ley", VARIANTE,
+                            clave_demo, RESPALDO_DEMO)
+    frases, descartadas = validar(r, ley)
+    if modo == "real" and descartadas and not frases and not r["fuera_de_alcance"]:
+        # Todas las frases se descartaron (p. ej., atribuían la sanción a quien lee): un reintento con aviso
+        r2 = llm.consultar_silencioso(armar_sistema(cfg, ley), mensaje + "\n\n(Atención: cita solo artículos de "
+                                      "esta ley, nombra solo organismos que aparezcan en ellos y respeta a quién se "
+                                      "aplica cada sanción; no digas que la sanción es para quien lee si la ley "
+                                      "sanciona a un comercio o establecimiento.)", ESQUEMA, "explicacion_ley", temperatura=0.2)
+        if r2:
+            f2, d2 = validar(r2, ley)
+            if f2:
+                r, frases, descartadas = r2, f2, descartadas + d2
+    estilo = False
+    if modo == "real" and frases and tono.personalizado(cfg, DEFECTOS):
+        nuevo = tono.aplicar(cfg, {"frases": [f["texto"] for f in frases]})
+        if nuevo:
+            texto_de = dict(zip(ley["articulo"], ley["texto"]))
+            for f, t in zip(frases, nuevo["frases"]):
+                # La versión con estilo solo reemplaza a la original si sigue fiel a sus artículos
+                citados = " ".join(texto_de[a] for a in f["articulos"])
+                if t.strip() and not _organismo_ajeno(t, citados) \
+                        and not sancion_mal_atribuida(t, _texto_sancion(ley) + " " + citados) \
+                        and not muni_sanciona(t, _texto_sancion(ley)) \
+                        and not cifras_sin_respaldo(t, citados + f" {ley.iloc[0]['nombre_ley']} {ley.iloc[0]['historia']}"):
+                    f["texto"] = sin_citas(t.strip())
+            estilo = True
+    return r, frases, descartadas, modo, estilo
 
 
 def mostrar_resultado(r: dict, frases: list[dict], descartadas: int, ley: pd.DataFrame):
@@ -320,9 +417,9 @@ def main():
         clave_demo = id_ley if not pregunta.strip() else "libre"
 
         with st.spinner("Leyendo la ley..."):
-            r, modo = llm.consultar(armar_sistema(cfg, ley), mensaje, ESQUEMA,
-                                    "explicacion_ley", VARIANTE, clave_demo, RESPALDO_DEMO)
-        frases, descartadas = validar(r, ley)
+            r, frases, descartadas, modo, estilo = explicar(cfg, ley, mensaje, clave_demo)
+        if estilo:
+            st.caption("🎨 Explicación escrita con el estilo de tu equipo (usuario, tono e instrucciones de la planilla).")
         id_consulta = registro.registrar(VARIANTE, equipo, f"{id_ley} | {mensaje}",
                                          json.dumps({"fuera_de_alcance": r["fuera_de_alcance"], "motivo": r.get("motivo", ""), "frases": frases,
                                                      "descartadas": descartadas}, ensure_ascii=False), modo)

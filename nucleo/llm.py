@@ -195,3 +195,27 @@ def consultar(sistema: str, usuario: str, esquema: dict, nombre_esquema: str,
     if equipo == "T00" or equipo.startswith("M"):  # diagnóstico solo para tutores y mentores
         st.code("\n".join(errores))
     return respuesta_demo(variante, clave_demo, respaldo_demo), "demo"
+
+
+def consultar_silencioso(sistema: str, usuario: str, esquema: dict, nombre_esquema: str,
+                         temperatura: float = 0.6, razonamiento: str | None = None) -> dict | None:
+    """Igual que consultar, pero sin mensajes en pantalla ni respuesta de demostración: devuelve
+    None si nadie responde. Se usa para pasos auxiliares (por ejemplo, aplicar el tono del equipo)."""
+    if str(_secreto("MODO_DEMO", "no")).lower() == "si":
+        return None
+    global TEMPERATURA
+    anterior = TEMPERATURA
+    try:
+        TEMPERATURA = temperatura
+        for e in [x for x in cadena() if not _pausado(x)]:
+            try:
+                return _llamar(e, sistema, usuario, esquema, nombre_esquema, razonamiento)
+            except RateLimitError:
+                _pausar(e, PAUSA_SATURADO)
+            except (AuthenticationError, PermissionDeniedError, NotFoundError):
+                _pausar(e, PAUSA_INVALIDO)
+            except Exception as err:
+                print(f"[llm] paso auxiliar {e['proveedor']}/{e['modelo']}: {type(err).__name__} {str(err)[:120]}", flush=True)
+        return None
+    finally:
+        TEMPERATURA = anterior

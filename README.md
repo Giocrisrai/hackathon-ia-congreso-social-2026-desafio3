@@ -16,6 +16,7 @@ Cada equipo recibe una app que **ya funciona** y la adapta a un usuario real des
 | Mentores | [Guía para mentores](docs/Guia_mentores_Desafio3.md) · [Riesgos éticos](docs/Riesgos_eticos_Desafio3.md) · [Prueba piloto](docs/Prueba_piloto_Desafio3.md) |
 | Material extra | [12 casos verificados para `casos_extra`](docs/complementos/casos_extra_12_casos.csv) · [3 proyectos de ley para `leyes_extra`](docs/complementos/leyes_extra_3_proyectos.csv) · [fuentes](docs/proyectos_ley_FUENTES.md) |
 | Pruebas de mentores | [Plan de pruebas de las 4 apps (D2 y D3)](docs/Plan_de_pruebas_mentores.xlsx) |
+| Calidad | [Evaluación del tono: método, resultados y controles](docs/Evaluacion_tono_D3.md) |
 | Quien quiera su propia versión | [Tutorial: fork, despliegue y cambios por variante](docs/TUTORIAL_FORK.md) |
 
 ## Estructura
@@ -48,7 +49,7 @@ Para sumar otra clave no hay que tocar código: se agrega al final de `orden` y 
 - A: la calificación (falso, engañoso…) viene solo de un caso verificado del corpus. La IA agrega un resumen "En simple" en el tono del equipo, y la explicación verificada siempre queda visible debajo.
 - B: cada frase cita su artículo y se descartan las que no lo tienen o que nombran un organismo que esos artículos no mencionan. Las preguntas de opinión o política reciben un aviso rojo; las que la ley no responde, uno amarillo.
 - La decisión final es de la persona y queda registrada; el registro vincula cada decisión con su consulta (`id` y `relacion`).
-- El tono, el usuario y el largo de la planilla se repiten al final del prompt como estilo obligatorio (A con razonamiento medio) para que la IA los respete.
+- **Estilo del equipo** (`nucleo/tono.py`): si el equipo cambia usuario, tono o instrucciones, un segundo paso reescribe solo lo que escribió la IA con ese estilo (por ejemplo, tratar de "hermano"), sin tocar la calificación, los artículos ni el texto verificado. Controles fijos impiden que ese paso pierda organismos o cifras, atribuya sanciones a quien lee o agregue contenido. Ver [Evaluación del tono](docs/Evaluacion_tono_D3.md).
 - B: cada frase fiel a su artículo (quién fiscaliza y quién sanciona), y los proyectos de ley se presentan como proyectos en trámite.
 - Logos de las instituciones organizadoras (Pontificia Universidad Católica de Chile y Duoc UC) en el encabezado.
 
@@ -58,7 +59,11 @@ Para sumar otra clave no hay que tocar código: se agrega al final de `orden` y 
 3. Entregar a cada equipo su código y clave y el enlace a la planilla base de su variante.
 4. Las apps se duermen sin visitas. La tarea [Mantener apps despiertas](https://github.com/Giocrisrai/hackathon-ia-congreso-social-2026-desafio2/actions/workflows/mantener_apps_despiertas.yml) (GitHub Actions, en el repositorio del D2) visita las 4 apps cada 4 horas y las despierta; igual conviene abrirlas antes de cada jornada. No subir cambios a `main` durante la jornada: cada cambio reinicia la app y reinicia los contadores de consultas. El registro queda en la memoria de la app (se descarga desde la barra lateral) y, si se configura `REGISTRO_FORM_URL`, también en el Google Form.
 
-## Pruebas realizadas (30 de octubre de 2026, IA real)
+## Pruebas
+- **Sin IA, en segundos:** `python pruebas/test_tono.py` y `python pruebas/test_variantes.py` (16 pruebas de los controles fijos).
+- **Evaluación del tono con IA real** (3 de noviembre): 75 ejecuciones con la configuración de la planilla de Guillermo, antes y después, juez independiente y lectura manual. Tono de 2,6 a 4,0 (A) y "hermano" de 0/4 a 8/8, sin insultos y con la calificación intacta. Detalle en [docs/Evaluacion_tono_D3.md](docs/Evaluacion_tono_D3.md); evaluador en `pruebas/evaluacion_tono/`.
+
+### Pruebas iniciales (30 de octubre de 2026, IA real)
 - A: caso de salud y estafa del "bono del Gobierno" respondidos como **Falso** desde el caso verificado; mensaje vacío avisa; pregunta política bloqueada.
 - B: Ley 21.100 explicada artículo por artículo; "¿quién me pone la multa?" responde el juzgado de policía local (art. 5); "¿qué opinas del gobierno?" queda fuera de alcance.
 - Mal uso: inyección de instrucciones, voto, ataque a un candidato, opinión, acusación sin sentencia y pedido de discurso partidista bloqueados o tratados como no verificables; estafa del SII → Falso. Los 12 casos y 3 proyectos de ley de `docs/complementos` pasan los validadores de la app.
