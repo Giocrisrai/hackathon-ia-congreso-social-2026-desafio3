@@ -11,6 +11,9 @@ Secrets (formato recomendado, igual al Desafío 2):
     [ia.mistral]
     api_key = "..."
     modelos = ["mistral-small-latest", "ministral-8b-latest"]
+    [ia.anthropic]                       # Claude, opcional (agregarlo a orden)
+    api_key = "sk-ant-..."
+    modelos = ["claude-haiku-5-5"]
 
 Un proveedor que no esté en PROVEEDORES necesita además  url = "https://.../v1".
 Formato anterior (sigue funcionando): OPENAI_API_KEY, MODELO y, opcional, OPENAI_BASE_URL.
@@ -30,6 +33,7 @@ from openai import (OpenAI, RateLimitError, APIConnectionError, APITimeoutError,
 CARPETA_DATOS = Path(__file__).resolve().parent.parent / "datos"
 
 PROVEEDORES = {
+    "anthropic":  "https://api.anthropic.com/v1/",
     "groq":       "https://api.groq.com/openai/v1",
     "mistral":    "https://api.mistral.ai/v1",
     "openai":     "https://api.openai.com/v1",
@@ -129,23 +133,41 @@ def _extraer_json(texto: str) -> dict:
         raise ValueError("la respuesta no trae JSON")
 
 
+_SIN_LIMITES = ("minItems", "maxItems", "minLength", "maxLength", "minimum", "maximum", "pattern")
+
+
+def _esquema_claude(esq):
+    """Claude acepta salida estructurada estricta, pero no todas las restricciones de JSON Schema
+    (por ejemplo minItems > 1). Se quitan: el código ya valida la forma de la respuesta."""
+    if isinstance(esq, dict):
+        return {k: _esquema_claude(v) for k, v in esq.items()
+                if k not in _SIN_LIMITES or (k == "minItems" and v in (0, 1))}
+    if isinstance(esq, list):
+        return [_esquema_claude(x) for x in esq]
+    return esq
+
+
 def _llamar(e, sistema, usuario, esquema, nombre_esquema, razonamiento=None) -> dict:
+    claude = "anthropic.com" in e["url"] or e["modelo"].startswith("claude")
     extra = {"reasoning_effort": razonamiento or RAZONAMIENTO} if "gpt-oss" in e["modelo"] else {}
     mensajes = [{"role": "system", "content": sistema}, {"role": "user", "content": usuario}]
-    formato = {"type": "json_schema", "json_schema": {"name": nombre_esquema, "schema": esquema, "strict": True}}
+    formato = {"type": "json_schema", "json_schema": {"name": nombre_esquema, "strict": True,
+                                                      "schema": _esquema_claude(esquema) if claude else esquema}}
+    # Claude (API compatible con OpenAI): los modelos nuevos rechazan temperature < 1 (error 400), así que se omite
+    temp = {} if claude else {"temperature": TEMPERATURA}
+    cliente = _cliente(e["url"], e["clave"])
     try:
-        r = _cliente(e["url"], e["clave"]).chat.completions.create(
-            model=e["modelo"], messages=mensajes, response_format=formato, temperature=TEMPERATURA,
-            extra_body=extra or None)
+        r = cliente.chat.completions.create(model=e["modelo"], messages=mensajes, response_format=formato,
+                                            extra_body=extra or None, **temp)
     except BadRequestError as err:
-        if "response_format" not in str(err) and "schema" not in str(err).lower():
+        if not claude and "response_format" not in str(err) and "schema" not in str(err).lower():
             raise
         # Proveedor sin salida estructurada estricta: se pide JSON y se le entrega el esquema en el prompt
         mensajes[0]["content"] += ("\n\nResponde SOLO con un objeto JSON válido que cumpla este esquema:\n"
                                    + json.dumps(esquema, ensure_ascii=False))
-        r = _cliente(e["url"], e["clave"]).chat.completions.create(
-            model=e["modelo"], messages=mensajes, response_format={"type": "json_object"},
-            temperature=TEMPERATURA, extra_body=extra or None)
+        # Claude no acepta json_object: va sin response_format y el JSON se extrae del texto
+        fmt = {} if claude else {"response_format": {"type": "json_object"}}
+        r = cliente.chat.completions.create(model=e["modelo"], messages=mensajes, extra_body=extra or None, **fmt, **temp)
     datos = _extraer_json(r.choices[0].message.content)
     faltan = [c for c in esquema.get("required", []) if c not in datos]
     if faltan:
