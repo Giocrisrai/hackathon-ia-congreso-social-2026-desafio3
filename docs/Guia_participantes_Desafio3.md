@@ -7,9 +7,23 @@ Su equipo recibe una herramienta de IA que **ya funciona** y tiene un día para 
 
 - **Problema:** la desinformación circula rápido por WhatsApp y redes, y las leyes están escritas en un lenguaje que poca gente entiende.
 - **Lo que se evalúa:** que la mejora sirva a un usuario real, que sea fiel a las fuentes, que funcione en la demo y que hayan pensado en cómo podría usarse mal.
-- **Lo que no se evalúa:** cuánto código escriben. Todo se cambia desde una planilla de Google.
+- **Lo que no se evalúa:** cuánto código escriben. Pueden mejorarla desde una planilla de Google, sin programar, o copiando el código desde GitHub con la [guía para equipos](TUTORIAL_FORK.md).
 
 La herramienta es **neutral por diseño**: no opina, no persuade y no habla de candidaturas, partidos ni autoridades.
+
+## Cómo es la jornada
+Son 8 etapas. En cada una completan una ficha ([Fichas del equipo](Fichas_equipo_Desafio3.md)), y su mentor los acompaña con los mismos criterios. El detalle está en [Etapas de la jornada](Etapas_jornada_Desafio3.md), y las ideas de mejora, en [Rutas de mejora](Rutas_de_mejora_Desafio3.md).
+
+| Etapa | Horario | Qué hacen con la plantilla | Entregable |
+|---|---|---|---|
+| 1 · Inmersión | 10:00–10:45 | Entender el problema y conversar con personas reales; probar la app sin cambiarla | Ficha de Inmersión |
+| 2 · Definición | 10:45–11:15 | Elegir usuario y caso, objetivo medible y 2 a 4 mejoras | Ficha de Definición |
+| 3 · Diseño | 11:15–11:45 | Diagnóstico de la plantilla, corpus a precargar y dónde decide una persona | Ficha de Diseño |
+| 4 · Desarrollo | 11:45–12:45 | Implementar las mejoras y cargar el corpus verificado | Registro de cambios |
+| 5 · Integración | 13:30–14:15 | Probar el flujo completo, casos límite y preguntas adversariales | Registro de pruebas |
+| 6 · Cierre técnico | 14:15–14:45 | Congelar, grabar el respaldo, set fijo para la demo, checklist ético y transparencia | Versión congelada |
+| 7 · Preparación del pitch | 14:45–16:15 | Relato, diapositivas, guion de demo y ensayo | Presentación y guion |
+| 8 · Presentación final | 16:15–18:15 | Pitch con demo y preguntas | Nota de aprendizajes |
 
 ## Cómo empezar (10 minutos)
 | Variante | App |
@@ -65,7 +79,7 @@ Cuiden sus `ejemplos`: la IA los imita. Si un ejemplo tiene un error o "declara"
 Si nada funciona y queda poco tiempo, borren la URL de la planilla de la barra lateral y presenten con la plantilla base.
 
 ## Entregables y pitch
-Antes de las **14:45 h** entreguen la **declaración de transparencia** (qué modelos usaron —aparece bajo cada respuesta— y qué cambiaron respecto de la plantilla) y el **checklist ético** completo. A las 14:15 h congelen lo que funciona y graben un video de respaldo. Pitch entre las **16:15 y las 18:15 h**: **5 minutos de pitch con demo y 3 de preguntas del jurado**. Se evalúa la versión congelada al **cierre técnico (14:45 h)**: lo que cambien después no cuenta.
+Antes de las **14:45 h** entreguen la **declaración de transparencia** (qué modelos usaron —aparece bajo cada respuesta— y qué cambiaron respecto de la plantilla) y el **checklist ético** completo. Desde las **14:15 h** (Etapa 6 · Cierre técnico) no agregan nada nuevo: corrigen lo visible, graban un video de respaldo y congelan la versión. Pitch entre las **16:15 y las 18:15 h**: **5 minutos de pitch con demo y 3 de preguntas del jurado**. Se evalúa la versión congelada al **cierre técnico (14:45 h)**: lo que cambien después no cuenta.
 
 En la demo usen **solo casos o leyes precargados y verificados**, con la fuente en pantalla.
 

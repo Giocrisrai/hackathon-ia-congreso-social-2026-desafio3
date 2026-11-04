@@ -12,6 +12,7 @@ Cada equipo copia este repositorio (fork), publica su propia app y la mejora: ve
 ## Documentación
 | Para | Documento |
 |---|---|
+| Jornada (8 etapas oficiales) | [Etapas de la jornada](docs/Etapas_jornada_Desafio3.md) · [Fichas del equipo por etapa](docs/Fichas_equipo_Desafio3.md) · [Rutas de mejora](docs/Rutas_de_mejora_Desafio3.md) |
 | Participantes | [Guía para participantes](docs/Guia_participantes_Desafio3.md) |
 | Mentores | [Guía para mentores](docs/Guia_mentores_Desafio3.md) · [Riesgos éticos](docs/Riesgos_eticos_Desafio3.md) · [Prueba piloto](docs/Prueba_piloto_Desafio3.md) |
 | Material extra | [12 casos verificados para `casos_extra`](docs/complementos/casos_extra_12_casos.csv) · [3 proyectos de ley para `leyes_extra`](docs/complementos/leyes_extra_3_proyectos.csv) · [fuentes](docs/proyectos_ley_FUENTES.md) |
