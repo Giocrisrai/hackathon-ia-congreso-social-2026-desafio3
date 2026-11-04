@@ -1,6 +1,6 @@
 # Rutas de mejora · Desafío 3 · Ciudadanía informada
 
-Estas rutas orientan, no obligan. Sirven en la **Etapa 3 · Diseño** para elegir 2 a 4 mejoras, y en la **Etapa 4 · Desarrollo** para implementarlas. Recomendación: elijan como máximo dos rutas y háganlas bien. Cada una indica si se hace en la planilla o en el código (recetas en la [guía para equipos](TUTORIAL_FORK.md), sección 7).
+Estas rutas orientan, no obligan. Son para los equipos que parten de un prototipo de referencia: sirven en la **Etapa 3 · Diseño** para elegir 2 a 4 mejoras, y en la **Etapa 4 · Desarrollo** para implementarlas. Recomendación: elijan como máximo dos rutas y háganlas bien. Cada una indica si se hace en la planilla o en el código (recetas en la [guía para equipos](TUTORIAL_FORK.md), sección 7).
 
 ## Variante A · Pausa antes de compartir
 

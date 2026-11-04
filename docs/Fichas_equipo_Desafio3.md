@@ -2,7 +2,7 @@
 
 Una ficha por etapa, con los campos que piden las guías oficiales del mentor. Copien este documento (o llénenlo en papel) y complétenlo a medida que avanzan. Las fichas 4 a 6 alimentan la **declaración de transparencia** y el **pitch**. Detalle de cada etapa en [Etapas de la jornada](Etapas_jornada_Desafio3.md).
 
-**Equipo:** ______ · **Mesa N°:** ______ · **Variante:** A · Pausa antes de compartir ☐ B · La ley en simple ☐ · **Mentor/a:** ______
+**Equipo:** ______ · **Mesa N°:** ______ · **Prototipo de referencia que usan:** A · Pausa ☐ B · Ley en simple ☐ ninguno, solución propia ☐ · **Mentor/a:** ______
 
 ## Ficha 1 · Inmersión (Etapa 1)
 | Campo | Respuesta |
@@ -22,7 +22,7 @@ Una ficha por etapa, con los campos que piden las guías oficiales del mentor. C
 | Con la voz del usuario: «Necesito… porque…» | |
 | Objetivo | |
 | Criterio de éxito (cómo sabrán que lo lograron) | |
-| Alcance: qué incluye (2 a 4 mejoras sobre la plantilla) | |
+| Alcance: qué incluye el prototipo (MVP) | |
 | Alcance: qué queda fuera | |
 | Hipótesis: «Creemos que [cambio] logrará [resultado] para [actor]. Lo sabremos si [métrica]» | |
 | Resultados no deseados posibles del objetivo | |
@@ -30,10 +30,11 @@ Una ficha por etapa, con los campos que piden las guías oficiales del mentor. C
 ## Ficha 3 · Diseño (Etapa 3)
 | Campo | Respuesta |
 |---|---|
-| Diagnóstico de la plantilla: fortalezas | |
-| Diagnóstico de la plantilla: brechas frente a su usuario | |
-| Mejoras priorizadas (imprescindible / deseable) y [ruta de mejora](Rutas_de_mejora_Desafio3.md) de origen | |
-| Dónde cae cada mejora: planilla o código, y qué campo o archivo | |
+| Prototipos de referencia: qué les sirve | |
+| Prototipos de referencia: qué no les sirve frente a su usuario | |
+| Decisión: partir de A o B, combinar, o construir su propia solución, y por qué | |
+| Funcionalidades priorizadas (imprescindible / deseable); ideas en [rutas de mejora](Rutas_de_mejora_Desafio3.md) | |
+| Tecnologías: prototipo de referencia (planilla o código), app nueva u otras herramientas | |
 | Diagrama del flujo: mensaje o ley → IA → controles (caso verificado o artículo) → **decisión de una persona** → registro | (dibujo) |
 | Corpus a precargar: casos o leyes, fuente oficial de cada uno y quién los verificó | |
 | Flujo del usuario (2 a 4 pasos): cuándo la usa, qué ve, qué hace con el resultado | |
@@ -52,7 +53,7 @@ Avance guardado: planilla ☐ · *commit* en su fork ☐ · URL de su app: _____
 ## Ficha 5 · Registro de pruebas (Etapa 5)
 | Caso | Tipo (representativo, límite, mal uso) | Resultado esperado | Resultado obtenido | ¿Falla crítica? |
 |---|---|---|---|---|
-| Mismo caso o ley con la plantilla base (antes) | representativo | | | |
+| Caso o documento representativo (si partieron de un prototipo: antes, con la referencia) | representativo | | | |
 | Mismo caso o ley con su versión (después) | representativo | | | |
 | | mal uso | | | |
 | | mal uso | | | |
@@ -75,7 +76,7 @@ Fallas que pasan a trabajo futuro: ______
 | Usos inapropiados del sistema | |
 | Viabilidad para escalarlo: Sí / No / Con condiciones, y cuáles | |
 | Checklist ético entregado | ☐ |
-| Declaración de transparencia entregada: qué venía en la plantilla, qué aportó el equipo, modelos usados (aparecen bajo cada respuesta) y si usaron IA para programar | ☐ |
+| Declaración de transparencia entregada: qué tomaron del prototipo de referencia, qué aportó el equipo, modelos usados (aparecen bajo cada respuesta) y si usaron IA para programar | ☐ |
 
 ## Ficha 7 · Pitch (Etapa 7)
 | Parte | Mensaje clave | Quién | Tiempo |

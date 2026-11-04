@@ -3,29 +3,35 @@
 Hackathon IA Aplicada · Congreso Social UC 2026 · 6 de noviembre de 2026 · Duoc UC San Joaquín
 
 ## El desafío en una frase
-Su equipo recibe una herramienta de IA que **ya funciona** y tiene un día para volverla útil y confiable para una persona concreta que necesita entender o verificar información pública.
+Su equipo tiene un día para crear un prototipo con IA que ayude a una persona concreta a **entender o verificar información pública**, de forma útil y confiable.
+
+**Prototipos de referencia.** Los mentores prepararon dos prototipos que ya funcionan y muestran una forma posible de resolver el desafío:
+- **A · Pausa antes de compartir,** para verificar contenidos virales;
+- **B · La ley en simple,** para entender leyes en lenguaje claro.
+
+Son material de referencia, no una tarea asignada. Pueden mejorarlos, adaptarlos, combinarlos o construir su propia solución, por ejemplo una de participación local. Se usan sobre todo en la **Etapa 3 · Diseño**. Esta guía explica cómo usarlos.
 
 - **Problema:** la desinformación circula rápido por WhatsApp y redes, y las leyes están escritas en un lenguaje que poca gente entiende.
-- **Lo que se evalúa:** que la mejora sirva a un usuario real, que sea fiel a las fuentes, que funcione en la demo y que hayan pensado en cómo podría usarse mal.
-- **Lo que no se evalúa:** cuánto código escriben. Pueden mejorarla desde una planilla de Google, sin programar, o copiando el código desde GitHub con la [guía para equipos](TUTORIAL_FORK.md).
+- **Lo que se evalúa:** que su solución sirva a un usuario real, que la IA aporte valor, que sea fiel a las fuentes, que funcione en la demo y que hayan pensado en cómo podría usarse mal. Si parten de un prototipo de referencia, se evalúa lo que ustedes aportan.
+- **Lo que no se evalúa:** cuánto código escriben. Un prototipo de referencia se puede mejorar desde una planilla de Google, sin programar, o copiando el código desde GitHub con la [guía para equipos](TUTORIAL_FORK.md).
 
-La herramienta es **neutral por diseño**: no opina, no persuade y no habla de candidaturas, partidos ni autoridades.
+Cualquier solución del desafío debe ser **neutral por diseño**, como los prototipos: no opina, no persuade y no habla de candidaturas, partidos ni autoridades.
 
 ## Cómo es la jornada
 Son 8 etapas. En cada una completan una ficha ([Fichas del equipo](Fichas_equipo_Desafio3.md)), y su mentor los acompaña con los mismos criterios. El detalle está en [Etapas de la jornada](Etapas_jornada_Desafio3.md), y las ideas de mejora, en [Rutas de mejora](Rutas_de_mejora_Desafio3.md).
 
-| Etapa | Horario | Qué hacen con la plantilla | Entregable |
+| Etapa | Horario | Qué hacen | Entregable |
 |---|---|---|---|
-| 1 · Inmersión | 10:00–10:45 | Entender el problema y conversar con personas reales; probar la app sin cambiarla | Ficha de Inmersión |
-| 2 · Definición | 10:45–11:15 | Elegir usuario y caso, objetivo medible y 2 a 4 mejoras | Ficha de Definición |
-| 3 · Diseño | 11:15–11:45 | Diagnóstico de la plantilla, corpus a precargar y dónde decide una persona | Ficha de Diseño |
-| 4 · Desarrollo | 11:45–12:45 | Implementar las mejoras y cargar el corpus verificado | Registro de cambios |
+| 1 · Inmersión | 10:00–10:45 | Entender el desafío y conversar con personas reales (todavía sin prototipos) | Ficha de Inmersión |
+| 2 · Definición | 10:45–11:15 | Elegir usuario y caso, objetivo medible y alcance del MVP | Ficha de Definición |
+| 3 · Diseño | 11:15–11:45 | Conocer los prototipos de referencia y decidir: partir de uno, combinar o crear el suyo. Funcionalidades, corpus a precargar y dónde decide una persona | Ficha de Diseño |
+| 4 · Desarrollo | 11:45–12:45 | Construir los componentes en paralelo y cargar el corpus verificado | Registro de cambios |
 | 5 · Integración | 13:30–14:15 | Probar el flujo completo, casos límite y preguntas adversariales | Registro de pruebas |
 | 6 · Cierre técnico | 14:15–14:45 | Congelar, grabar el respaldo, set fijo para la demo, checklist ético y transparencia | Versión congelada |
 | 7 · Preparación del pitch | 14:45–16:15 | Relato, diapositivas, guion de demo y ensayo | Presentación y guion |
 | 8 · Presentación final | 16:15–18:15 | Pitch con demo y preguntas | Nota de aprendizajes |
 
-## Cómo empezar (10 minutos)
+## Cómo usar un prototipo de referencia (10 minutos, en la Etapa 3)
 | Variante | App |
 |---|---|
 | A · Pausa antes de compartir | https://hackaton-d3-pausa.streamlit.app |
@@ -42,7 +48,7 @@ Para pedir un tono o un trato, escríbanlo claro en `tono` o en `instrucciones_e
 
 En la pestaña `config` editan solo la columna **valor**: a quién le habla la IA (`usuario`), su tono, el largo, 1 a 3 ejemplos de respuesta ideal, reglas propias (`instrucciones_extra`) y los textos de la pantalla.
 
-## Las dos variantes
+## Los dos prototipos de referencia
 | | A · Pausa antes de compartir | B · La ley en simple |
 |---|---|---|
 | Qué hace | Revisa un mensaje sospechoso antes de reenviarlo: qué afirma, si se puede verificar, y lo compara con casos ya verificados | Explica una ley en lenguaje claro; cada frase indica de qué artículo viene y se puede ver el texto original |

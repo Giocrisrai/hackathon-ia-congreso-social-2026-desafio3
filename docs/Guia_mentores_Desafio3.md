@@ -1,27 +1,33 @@
 # Guía breve para mentores · Desafío 3 · Ciudadanía informada
 
-Plantillas: **"Pausa antes de compartir"** (A) y **"La ley en simple"** (B), asignadas por sorteo. Cada equipo recibe el enlace a la app, su código y clave, y la planilla para personalizarla. La herramienta ya funciona, pero está pensada para "cualquier persona": **el trabajo del equipo es volverla útil, segura y confiable para alguien concreto.**
+Prototipos de referencia: **"Pausa antes de compartir"** (A) y **"La ley en simple"** (B). Son **material de referencia,** no una tarea asignada: muestran una forma posible de resolver el desafío. Están pensados para "cualquier persona", y cada equipo puede:
+- mejorarlos, adaptarlos o combinarlos para alguien concreto;
+- construir su propia solución.
 
-| Variante | App |
+Se presentan en la **Etapa 3 · Diseño**. A cada equipo le entregas su código y clave, que sirven en las dos apps.
+
+| Prototipo de referencia | App |
 |---|---|
 | A · Pausa antes de compartir | https://hackaton-d3-pausa.streamlit.app |
 | B · La ley en simple | https://hackaton-d3-ley.streamlit.app |
 
-Acompañas a 4 equipos con las **guías oficiales del mentor** (8 etapas). Este documento agrega lo propio del Desafío 3. Los equipos pueden cambiar la herramienta desde la planilla, sin programar, o copiando el código desde GitHub con la [guía para equipos](TUTORIAL_FORK.md).
+Acompañas a 4 equipos con las **guías oficiales del mentor** (8 etapas). Este documento agrega lo propio del Desafío 3. Un prototipo de referencia se cambia desde la planilla, sin programar, o copiando el código desde GitHub con la [guía para equipos](TUTORIAL_FORK.md).
 
 ## Tu rol en cada etapa
 Detalle por etapa (actividades, señales de alerta y criterios de observación) en [Etapas de la jornada](Etapas_jornada_Desafio3.md). Los equipos completan las [Fichas del equipo](Fichas_equipo_Desafio3.md).
 
 | Etapa | Tu foco en el Desafío 3 |
 |---|---|
-| 1 · Inmersión | Que entiendan el problema antes de tocar la app, conversen con personas reales y usen fuentes verídicas |
-| 2 · Definición | Recortar: 2 a 4 mejoras, objetivo medible y tema dentro de bases. **Checkpoint ético 1:** ¿qué daño podría causar su objetivo? |
-| 3 · Diseño | Que el diagrama muestre dónde decide una persona y de dónde viene cada caso o ley |
-| 4 · Desarrollo | Corpus con fuente oficial y texto literal; que no quiten las reglas de neutralidad |
-| 5 · Integración | Probar como usuario. **Checkpoint ético 2:** preguntas partidistas, de actualidad o sobre candidatos |
+| 1 · Inmersión | Que entiendan el desafío antes de ver los prototipos, conversen con personas reales y usen fuentes verídicas |
+| 2 · Definición | Recortar: objetivo medible, alcance que quepa en el día y tema dentro de bases. Para el checkpoint ético: ¿qué daño podría causar su objetivo? |
+| 3 · Diseño | Presentar los prototipos de referencia y ayudar a decidir: partir de uno, combinar o crear el suyo. Que el diagrama muestre dónde decide una persona, de dónde viene cada documento y cuál es el aporte propio |
+| 4 · Desarrollo | Corpus con fuente oficial y texto literal; que mantengan las reglas de neutralidad |
+| 5 · Integración | Probar como usuario: preguntas partidistas, de actualidad o sobre candidatos |
 | 6 · Cierre técnico | Congelar, set fijo para la demo, checklist ético y transparencia antes de las 14:45 h |
 | 7 · Preparación del pitch | Ensayo cronometrado, fuente visible en la demo, diapositiva de uso responsable |
 | 8 · Presentación final | No intervenir; después, 2 fortalezas, 1 mejora y una observación ética |
+
+Los dos **checkpoints éticos** los guía Pastoral; su checklist debe estar completo al cierre técnico.
 
 ## Antes de la jornada
 - Entra a ambas apps con **tu código de mentor** (M01, M02…, lo entrega la organización) y recorre un caso completo en cada una. Tu código tiene cuota propia, no gasta las consultas de ningún equipo, y si la IA falla te muestra el diagnóstico.
