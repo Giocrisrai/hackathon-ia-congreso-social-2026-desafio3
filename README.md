@@ -2,7 +2,7 @@
 
 Plantillas del Desafío 3, creadas por **Guillermo Pinto** ([repositorio original](https://github.com/gpintofuentes/HACKATON-D3)). Esta versión suma el mismo sistema de las plantillas del Desafío 2: IA con varios proveedores y cambio automático, códigos de mentor, registro descargable y documentación para equipos y mentores. Las reglas y la lógica de cada variante son las del repositorio original.
 
-Cada equipo recibe una app que **ya funciona** y la adapta a un usuario real desde una planilla de Google, sin programar: código y clave por equipo, pestaña `config`, pestaña de extras con fila EJEMPLO, botón "Recargar configuración" y 120 consultas a la IA por equipo.
+Cada equipo copia este repositorio (fork), publica su propia app y la mejora: ver la [guía para equipos](docs/TUTORIAL_FORK.md). La app **ya funciona** y se adapta a un usuario real desde una planilla de Google, sin programar: código y clave por equipo, pestaña `config`, pestaña de extras con fila EJEMPLO, botón "Recargar configuración" y 120 consultas a la IA por equipo.
 
 | Variante | App en línea | Qué hace |
 |---|---|---|
@@ -17,13 +17,15 @@ Cada equipo recibe una app que **ya funciona** y la adapta a un usuario real des
 | Material extra | [12 casos verificados para `casos_extra`](docs/complementos/casos_extra_12_casos.csv) · [3 proyectos de ley para `leyes_extra`](docs/complementos/leyes_extra_3_proyectos.csv) · [fuentes](docs/proyectos_ley_FUENTES.md) |
 | Pruebas de mentores | [Plan de pruebas de las 4 apps (D2 y D3)](docs/Plan_de_pruebas_mentores.xlsx) |
 | Calidad | [Evaluación del tono: método, resultados y controles](docs/Evaluacion_tono_D3.md) |
-| Quien quiera su propia versión | [Tutorial: fork, despliegue y cambios por variante](docs/TUTORIAL_FORK.md) |
+| **Equipos: copiar y mejorar el código** | [Guía para equipos: fork, publicar la app, recetas de mejora y app nueva](docs/TUTORIAL_FORK.md) |
 
 ## Estructura
 ```
 app_a.py · app_b.py          puntos de entrada de cada variante
+app_nueva.py                 punto de entrada de una herramienta nueva del equipo
 variantes/a_verificador.py   Variante A: reglas, esquema de respuesta y pantalla
 variantes/b_ley_simple.py    Variante B: reglas, esquema, descarte de frases sin artículo y pantalla
+variantes/c_nueva.py         plantilla para construir una herramienta nueva con las mismas protecciones
 nucleo/llm.py                IA multi-proveedor, salida JSON estructurada y modo demo      (no modificar)
 nucleo/salvaguardas.py       aviso de IA, ingreso por equipo o mentor y cuota            (no modificar)
 nucleo/registro.py           registro en la app y, opcional, en un Google Form            (no modificar)
