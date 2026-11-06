@@ -11,6 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from nucleo import config, llm, marca, registro, salvaguardas, tono
+from variantes import b_perfil
 
 VARIANTE = "B"
 RUTA_CORPUS = Path(__file__).resolve().parent.parent / "datos" / "b_leyes.csv"
@@ -180,9 +181,10 @@ def corpus_del_equipo(base: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([base, validas], ignore_index=True) if len(validas) else base
 
 
-def armar_sistema(cfg: dict, ley: pd.DataFrame) -> str:
+def armar_sistema(cfg: dict, ley: pd.DataFrame, perfil: str = "") -> str:
     arts = ley[["articulo", "titulo_articulo", "texto"]].to_dict(orient="records")
     info = ley.iloc[0]
+    bloque_perfil = b_perfil.instrucciones_perfil(perfil)
     return f"""Eres un asistente que explica leyes y documentos públicos chilenos en lenguaje claro.
 
 USUARIO AL QUE LE HABLAS: {cfg['usuario']}
@@ -197,6 +199,8 @@ HISTORIA: {info['historia']}
 COBERTURA: {info['cobertura']}
 ARTÍCULOS:
 {json.dumps(arts, ensure_ascii=False)}
+
+{bloque_perfil}
 {REGLAS_FIJAS}
 ESTILO OBLIGATORIO para cada frase (aplícalo siempre; solo cede ante las reglas obligatorias de arriba):
 - Le hablas a: {cfg['usuario']}
@@ -289,15 +293,15 @@ def validar(r: dict, ley: pd.DataFrame) -> tuple[list[dict], int]:
     return buenas, descartadas
 
 
-def explicar(cfg: dict, ley: pd.DataFrame, mensaje: str, clave_demo: str):
+def explicar(cfg: dict, ley: pd.DataFrame, mensaje: str, clave_demo: str, perfil: str = ""):
     """Consulta a la IA, valida cada frase y aplica el estilo del equipo.
     Devuelve (respuesta, frases válidas, descartadas, modo, estilo_aplicado)."""
-    r, modo = llm.consultar(armar_sistema(cfg, ley), mensaje, ESQUEMA, "explicacion_ley", VARIANTE,
+    r, modo = llm.consultar(armar_sistema(cfg, ley, perfil), mensaje, ESQUEMA, "explicacion_ley", VARIANTE,
                             clave_demo, RESPALDO_DEMO)
     frases, descartadas = validar(r, ley)
     if modo == "real" and descartadas and not frases and not r["fuera_de_alcance"]:
         # Todas las frases se descartaron (p. ej., atribuían la sanción a quien lee): un reintento con aviso
-        r2 = llm.consultar_silencioso(armar_sistema(cfg, ley), mensaje + "\n\n(Atención: cita solo artículos de "
+        r2 = llm.consultar_silencioso(armar_sistema(cfg, ley, perfil), mensaje + "\n\n(Atención: cita solo artículos de "
                                       "esta ley, nombra solo organismos que aparezcan en ellos y respeta a quién se "
                                       "aplica cada sanción; no digas que la sanción es para quien lee si la ley "
                                       "sanciona a un comercio o establecimiento.)", ESQUEMA, "explicacion_ley", temperatura=0.2)
@@ -322,7 +326,32 @@ def explicar(cfg: dict, ley: pd.DataFrame, mensaje: str, clave_demo: str):
     return r, frases, descartadas, modo, estilo
 
 
-def mostrar_resultado(r: dict, frases: list[dict], descartadas: int, ley: pd.DataFrame):
+def filtrar_por_categoria(corpus: pd.DataFrame, categoria: str | None) -> pd.DataFrame:
+    """Filtra las leyes por categoría.
+
+    Usa la columna `categoria` del corpus si existe y tiene coincidencias; si no,
+    infiere la categoría desde el nombre de la ley con `b_perfil.inferir_categoria`.
+    Con `categoria` vacía o None devuelve el corpus completo ("Todas").
+    """
+    if not categoria:
+        return corpus
+    if "categoria" in corpus.columns:
+        crudas = corpus["categoria"].fillna("").astype(str).str.strip().str.lower()
+        inferidas = crudas.map(b_perfil.inferir_categoria)
+        filtrado = corpus[(crudas == categoria) | (inferidas == categoria)]
+        if len(filtrado):
+            return filtrado
+    nombres = corpus.drop_duplicates("id_ley")[["id_ley", "nombre_ley"]]
+    ids = [
+        fila["id_ley"]
+        for _, fila in nombres.iterrows()
+        if b_perfil.inferir_categoria(str(fila["nombre_ley"])) == categoria
+    ]
+    return corpus[corpus["id_ley"].isin(ids)]
+
+
+def mostrar_resultado(r: dict, frases: list[dict], descartadas: int, ley: pd.DataFrame,
+                      categoria: str = ""):
     info = ley.iloc[0]
     if r["fuera_de_alcance"]:
         if r.get("motivo") == "opinion_o_politica":
@@ -363,6 +392,10 @@ def mostrar_resultado(r: dict, frases: list[dict], descartadas: int, ley: pd.Dat
 
     st.caption(f"🗓️ {info['historia']}")
     st.markdown(f"🔗 Texto oficial: {info['url_oficial']}")
+
+    st.divider()
+    st.markdown(b_perfil.bloque_dignidad_desde_frases(
+        info["nombre_ley"], frases, categoria=categoria or ""))
 
 
 def es_proyecto(info) -> bool:
@@ -430,7 +463,7 @@ def main():
     # ---------------------------------------------------------
     st.write("---")
     st.subheader("1. Identifica tu perfil ciudadano")
-    perfil = st.radio(
+    perfil_ui = st.radio(
         "Selecciona tu momento de vida actual para adaptar las explicaciones de la IA:",
         ["🎒 Escolar (Enseñanza Media / Menor de 18)", 
          "🎓 Universitario o Técnico (Educación Superior)", 
@@ -438,32 +471,45 @@ def main():
         index=0
     )
     
-    # Guardamos el perfil en el session_state para que el backend lo pueda leer en tono.py
-    st.session_state["perfil_usuario"] = "escolar" if "🎒" in perfil else "universitario" if "🎓" in perfil else "laboral"
+    # La 3ra persona es dueña del selector; Persona B solo normaliza el valor para el prompt.
+    st.session_state["perfil_usuario"] = "escolar" if "🎒" in perfil_ui else "universitario" if "🎓" in perfil_ui else "laboral"
+    perfil = b_perfil.normalizar_perfil(st.session_state["perfil_usuario"])
 
     # ---------------------------------------------------------
     # 🌿 4. LLUVIA DE IDEAS: CATEGORÍAS DE INTERÉS
     # ---------------------------------------------------------
     st.subheader("2. ¿Qué causas te mueven hoy?")
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     
-    if 'categoria_seleccionada' not in st.session_state:
-        st.session_state.categoria_seleccionada = "ecologia" # Valor inicial por defecto
+    if "categoria_seleccionada" not in st.session_state:
+        st.session_state["categoria_seleccionada"] = None  # "Todas"
 
     with col1:
         if st.button("🌿 Ecología y Medioambiente", use_container_width=True):
-            st.session_state.categoria_seleccionada = "ecologia"
+            st.session_state["categoria_seleccionada"] = "ecologia"
     with col2:
         if st.button("📚 Educación y Cultura", use_container_width=True):
-            st.session_state.categoria_seleccionada = "educacion"
+            st.session_state["categoria_seleccionada"] = "educacion"
     with col3:
         if st.button("💼 Trabajo y Oportunidades", use_container_width=True):
-            st.session_state.categoria_seleccionada = "trabajo"
+            st.session_state["categoria_seleccionada"] = "trabajo"
+    with col4:
+        if st.button("🌐 Todas", use_container_width=True):
+            st.session_state["categoria_seleccionada"] = None
 
-    st.markdown(f"Filtrando proyectos sobre: **{st.session_state.categoria_seleccionada.capitalize()}**")
+    categoria = st.session_state["categoria_seleccionada"]
+    if categoria:
+        st.caption(f"Filtrando leyes sobre **{categoria.capitalize()}**. Elige 'Todas' para ver el resto.")
+    else:
+        st.caption("Mostrando **todas** las leyes.")
 
     # Carga original del corpus de leyes de la plantilla
-    corpus = corpus_del_equipo(cargar_corpus())
+    corpus = filtrar_por_categoria(corpus_del_equipo(cargar_corpus()), categoria)
+    if corpus.empty:
+        st.info("No hay leyes cargadas para esa categoría. Prueba con 'Todas'.")
+        salvaguardas.pie(equipo)
+        st.stop()
+
     leyes = corpus.drop_duplicates("id_ley").set_index("id_ley")
     
     # Selector de Leyes (El usuario elige la ley dentro del sistema cerrado)
@@ -471,13 +517,13 @@ def main():
                           format_func=lambda i: _etiqueta_ley(leyes, i))
     ley = corpus[corpus["id_ley"] == id_ley]
 
-    # Ajustar el placeholder dinámico según la edad del usuario
-    if st.session_state["perfil_usuario"] == "escolar":
+    # Ajustar el placeholder dinámico según el perfil normalizado
+    if perfil == "Escolar":
         placeholder_dinamico = "Ej: ¿Cómo afecta esto a mi colegio o barrio en palabras simples?"
-    elif st.session_state["perfil_usuario"] == "universitario":
-        placeholder_dinamico = "Ej: ¿Qué artículos regulan mis derechos o prácticas en este proyecto?"
+    elif perfil == "Universitario":
+        placeholder_dinamico = "Ej: ¿Qué artículos regulan mis derechos o prácticas en esta ley?"
     else:
-        placeholder_dinamico = "Ej: ¿Qué beneficios prácticos, plazos o subsidios económicos entrega esta ley?"
+        placeholder_dinamico = "Ej: ¿Qué beneficios prácticos, plazos u obligaciones establece esta ley?"
 
     pregunta = st.text_input("¿Tienes una pregunta específica sobre esta ley? (opcional)",
                              placeholder=placeholder_dinamico)
@@ -489,7 +535,8 @@ def main():
     if es_proyecto(ley.iloc[0]) and texto_boton == DEFECTOS["texto_boton"]:
         texto_boton = "Explicar proyecto"
     boton = st.button(texto_boton, type="primary")
-    firma = f"B|{id_ley}|{pregunta.strip()}"
+    categoria_reg = categoria or "todas"
+    firma = f"B|{id_ley}|{perfil}|{categoria_reg}|{pregunta.strip()}"
     if boton and salvaguardas.es_repeticion(firma):
         st.info("Ya explicamos eso hace un momento: abajo está el resultado.")
     elif boton:
@@ -500,29 +547,33 @@ def main():
         clave_demo = id_ley if not pregunta.strip() else "libre"
 
         with st.spinner("Leyendo la ley..."):
-            r, frases, descartadas, modo, estilo = explicar(cfg, ley, mensaje, clave_demo)
+            r, frases, descartadas, modo, estilo = explicar(cfg, ley, mensaje, clave_demo, perfil)
         if estilo:
             st.caption("🎨 Explicación escrita con el estilo de tu equipo (usuario, tono e instrucciones de la planilla).")
-        id_consulta = registro.registrar(VARIANTE, equipo, f"{id_ley} | {mensaje}",
-                                         json.dumps({"fuera_de_alcance": r["fuera_de_alcance"], "motivo": r.get("motivo", ""), "frases": frases,
-                                                     "descartadas": descartadas}, ensure_ascii=False), modo)
-        st.session_state["ultimo_b"] = (r, frases, descartadas, id_ley, mensaje, id_consulta)
+        id_consulta = registro.registrar(
+            VARIANTE, equipo, f"{id_ley} | {perfil} | {categoria_reg} | {mensaje}",
+            json.dumps({"fuera_de_alcance": r["fuera_de_alcance"], "motivo": r.get("motivo", ""),
+                        "perfil": perfil, "categoria": categoria_reg, "frases": frases,
+                        "descartadas": descartadas}, ensure_ascii=False), modo)
+        st.session_state["ultimo_b"] = (r, frases, descartadas, id_ley, ley, perfil, categoria,
+                                        mensaje, id_consulta)
 
     if "ultimo_b" in st.session_state:
-        r, frases, descartadas, id_ult, mensaje, id_consulta = (list(st.session_state["ultimo_b"]) + [""])[:6]
-        ley_ult = corpus[corpus["id_ley"] == id_ult]
-        if ley_ult.empty:  
+        (r, frases, descartadas, id_ult, ley_ult, perfil_ult, categoria_ult,
+         mensaje, id_consulta) = (list(st.session_state["ultimo_b"]) + [""] * 9)[:9]
+        if not isinstance(ley_ult, pd.DataFrame) or ley_ult.empty:
             st.session_state.pop("ultimo_b")
         else:
             st.divider()
-            mostrar_resultado(r, frases, descartadas, ley_ult)
+            mostrar_resultado(r, frases, descartadas, ley_ult, categoria_ult or "")
 
             if frases and not r["fuera_de_alcance"]:
                 st.divider()
                 claridad = st.radio("¿Te quedó clara la explicación?",
                                     ["Sí", "Más o menos", "No"], index=None)
                 if claridad and st.button("Registrar mi respuesta"):
-                    registro.registrar(VARIANTE, equipo, f"{id_ult} | {mensaje}",
+                    registro.registrar(VARIANTE, equipo,
+                                       f"{id_ult} | {perfil_ult} | {categoria_ult or 'todas'} | {mensaje}",
                                        f"CLARIDAD: {claridad}", "decision", relacion=id_consulta)
                     st.success("Respuesta registrada. ¡Gracias!")
 

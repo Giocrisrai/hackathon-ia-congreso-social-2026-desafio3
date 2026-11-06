@@ -99,6 +99,67 @@ def test_bloque_dignidad_desde_frases():
     assert "Humedales" in texto
 
 
+def _ley_de_prueba():
+    import pandas as pd
+
+    return pd.DataFrame([{
+        "id_ley": "L1",
+        "nombre_ley": "Ley 21.202 · Protección de Humedales Urbanos",
+        "articulo": "1",
+        "titulo_articulo": "Objeto",
+        "texto": "Esta ley protege los humedales urbanos.",
+        "historia": "Publicada en 2020.",
+        "url_oficial": "https://www.bcn.cl/leychile",
+        "cobertura": "completa",
+        "origen": "plantilla",
+    }])
+
+
+def test_armar_sistema_inserta_perfil_antes_de_las_reglas_fijas():
+    from variantes import b_ley_simple as B
+
+    sistema = B.armar_sistema(dict(B.DEFECTOS), _ley_de_prueba(), "Universitario")
+    assert "PERFIL ACTIVO: Universitario" in sistema
+    assert sistema.index("PERFIL ACTIVO: Universitario") < sistema.index("REGLAS OBLIGATORIAS")
+    assert "REGLAS OBLIGATORIAS" in sistema
+
+
+def test_armar_sistema_sin_perfil_usa_escolar():
+    from variantes import b_ley_simple as B
+
+    sistema = B.armar_sistema(dict(B.DEFECTOS), _ley_de_prueba())
+    assert "PERFIL ACTIVO: Escolar" in sistema
+
+
+def test_filtrar_por_categoria_por_nombre():
+    import pandas as pd
+
+    from variantes import b_ley_simple as B
+
+    corpus = pd.DataFrame([
+        {"id_ley": "L1", "nombre_ley": "Ley 21.202 · Protección de Humedales Urbanos", "articulo": "1"},
+        {"id_ley": "L2", "nombre_ley": "Ley 21.165 · Jornada parcial para estudiantes trabajadores", "articulo": "1"},
+        {"id_ley": "L3", "nombre_ley": "Ley X · Normas Generales", "articulo": "1"},
+    ])
+    assert list(B.filtrar_por_categoria(corpus, "ecologia")["id_ley"]) == ["L1"]
+    assert list(B.filtrar_por_categoria(corpus, "trabajo")["id_ley"]) == ["L2"]
+    assert list(B.filtrar_por_categoria(corpus, "educacion")["id_ley"]) == []
+    assert len(B.filtrar_por_categoria(corpus, None)) == 3
+
+
+def test_filtrar_por_categoria_usa_columna_si_existe():
+    import pandas as pd
+
+    from variantes import b_ley_simple as B
+
+    corpus = pd.DataFrame([
+        {"id_ley": "L1", "nombre_ley": "Ley X", "categoria": "trabajo", "articulo": "1"},
+        {"id_ley": "L2", "nombre_ley": "Ley Y", "categoria": "Ecología", "articulo": "1"},
+    ])
+    assert list(B.filtrar_por_categoria(corpus, "trabajo")["id_ley"]) == ["L1"]
+    assert list(B.filtrar_por_categoria(corpus, "ecologia")["id_ley"]) == ["L2"]
+
+
 if __name__ == "__main__":
     for nombre, f in list(globals().items()):
         if nombre.startswith("test_"):
