@@ -6,11 +6,13 @@ Estado: **pendiente de carga**. Los textos deben copiarse desde la BCN (Ley Chil
 
 | id_ley | Norma a verificar | Qué confirmar antes de cargar | Enlace BCN | Estado |
 |---|---|---|---|---|
-| `L21165` | Estatuto Laboral Joven / jornada parcial | Número de ley y título oficial. La propuesta original indica Ley 21.165; confirmar en BCN. | por completar | pendiente |
+| `L21165` | Ley 21.165 · Establece una jornada parcial alternativa para estudiantes trabajadores | Verificada con el PDF oficial de BCN (publicada 26-07-2019). Cargada: 14 filas (intro y letras a-h del art. 40 bis E del Código del Trabajo, arts. 2 a 4 de la ley y transitorios). | https://bcn.cl/3l7ev | cargada |
 | `L21202` | Humedales urbanos | Número de ley (propuesta: 21.202) y artículos que regulan la protección. | por completar | pendiente |
 | `CDT8` | Código del Trabajo, art. 8 (prácticas, colación y movilización) | Que el art. 8 contiene la obligación que se quiere explicar. No existe una ley autónoma "de pago de prácticas". | https://www.bcn.cl/leychile/navegar?idNorma=207436 | pendiente |
 
-Nota: la Ley 21.133 aparece en resultados de búsqueda como norma sobre trabajadores independientes; no debe usarse como "Estatuto Laboral Joven" sin verificarlo en BCN.
+Nota: el título "Estatuto Laboral Joven" del brief no corresponde a la Ley 21.165, que se llama "Establece una jornada parcial alternativa para estudiantes trabajadores". La Ley 21.133 aparece en resultados de búsqueda como norma sobre trabajadores independientes; no la uses sin verificarla en BCN.
+
+Las referencias "art. N" de la ley usan el número de la fila: `40 bis E a` … `40 bis E h` para las letras del art. 40 bis E del Código del Trabajo, `2`, `3`, `4` para los artículos de la ley y `transitorio primero` / `transitorio segundo`.
 
 ## 2. Cómo cargar cada norma
 
@@ -28,11 +30,15 @@ Completar el artículo esperado solo cuando el texto ya esté cargado y verifica
 
 | Norma | Pregunta | Artículo esperado |
 |---|---|---|
-| Estatuto Laboral Joven (`L21165`) | ¿Puedo trabajar 30 horas y estudiar? | por confirmar |
-| Estatuto Laboral Joven (`L21165`) | ¿Qué derechos tengo si trabajo medio tiempo? | por confirmar |
-| Estatuto Laboral Joven (`L21165`) | ¿Qué pasa si mi empleador no cumple la jornada pactada? | por confirmar |
-| Estatuto Laboral Joven (`L21165`) | ¿Desde cuándo rige esta ley? | por confirmar |
-| Estatuto Laboral Joven (`L21165`) | ¿Quién fiscaliza que se cumpla? | por confirmar |
+| Jornada parcial (`L21165`) | ¿Qué entiende la ley por estudiante trabajador? | `40 bis E a` |
+| Jornada parcial (`L21165`) | ¿Qué pasa si dejo de cumplir los requisitos de edad o estudios? | `40 bis E c` |
+| Jornada parcial (`L21165`) | ¿Cuántas horas puedo trabajar al día? | `40 bis E d` |
+| Jornada parcial (`L21165`) | ¿Un accidente en el trayecto entre el colegio o la universidad y el trabajo es accidente laboral? | `40 bis E d` |
+| Jornada parcial (`L21165`) | ¿Tengo permiso para rendir exámenes? | `40 bis E e` |
+| Jornada parcial (`L21165`) | ¿Qué puedo pactar en vacaciones académicas? | `40 bis E f` |
+| Jornada parcial (`L21165`) | ¿Qué pasa si soy carga familiar? | `40 bis E g` |
+| Jornada parcial (`L21165`) | ¿Qué empresas no pueden pactar esta jornada? | `40 bis E h` |
+| Jornada parcial (`L21165`) | ¿Desde cuándo rige la ley? | `transitorio primero` |
 | Prácticas (`CDT8`) | ¿Me tienen que pagar colación y movilización? | art. 8 |
 | Prácticas (`CDT8`) | ¿Qué pasa si no me pagan la colación? | por confirmar |
 | Prácticas (`CDT8`) | ¿Quién tiene que pagar la movilización? | por confirmar |
@@ -48,7 +54,8 @@ Comprobar en cada consulta: que cada frase lleve `(art. N)`, que el artículo ex
 
 ## 4. Verificación final (checklist de Persona A)
 
-- [ ] Las 3 normas están cargadas al final de `datos/b_leyes.csv`.
+- [x] Ley 21.165 cargada al final de `datos/b_leyes.csv` (14 filas).
+- [ ] Ley 21.202 (humedales) y art. 8 del Código del Trabajo cargados.
 - [ ] `python pruebas/test_corpus.py` pasa.
 - [ ] `python pruebas/test_variantes.py` sigue pasando (la primera ley sigue siendo L21100).
 - [ ] `datos/b_diccionario.md` lista las 3 normas nuevas.
