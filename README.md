@@ -12,6 +12,7 @@ Son **prototipos de referencia**: muestran una forma posible de resolver el desa
 ## Documentación
 | Para | Documento |
 |---|---|
+| **Video: cómo funcionan los prototipos (1 min)** | [▶️ Ver video](docs/videos/Video_prototipos_Desafio3.mp4): la pregunta del desafío, el recorrido por las dos apps, las protecciones incluidas y desde dónde parte cada equipo |
 | Jornada (8 etapas oficiales) | [Etapas de la jornada](docs/Etapas_jornada_Desafio3.md) · [Fichas del equipo por etapa](docs/Fichas_equipo_Desafio3.md) · [Rutas de mejora](docs/Rutas_de_mejora_Desafio3.md) |
 | Participantes | [Guía para participantes](docs/Guia_participantes_Desafio3.md) |
 | Mentores | [Guía para mentores](docs/Guia_mentores_Desafio3.md) · [Riesgos éticos](docs/Riesgos_eticos_Desafio3.md) · [Prueba piloto](docs/Prueba_piloto_Desafio3.md) |
