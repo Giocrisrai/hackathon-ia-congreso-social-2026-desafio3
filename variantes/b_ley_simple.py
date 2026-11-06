@@ -378,30 +378,113 @@ def _etiqueta_ley(leyes: pd.DataFrame, id_ley: str) -> str:
 
 
 def main():
-    st.set_page_config(page_title="La ley en simple · Desafío 3", page_icon="📜")
+    st.set_page_config(page_title="La ley en simple · Desafío 3", page_icon="📜", layout="wide")
     cfg = config.panel_config(DEFECTOS)
 
+    # ---------------------------------------------------------
+    # ♿ 1. CONFIGURACIÓN DE ACCESIBILIDAD (Pautas WCAG / Voto Asistido)
+    # ---------------------------------------------------------
+    st.sidebar.markdown("## ♿ Accesibilidad y Voto Asistido")
+    modo_accesible = st.sidebar.checkbox("Activar Modo Alto Contraste")
+    lector_voz = st.sidebar.checkbox("Activar Asistencia por Voz")
+
+    if modo_accesible:
+        st.markdown("""
+            <style>
+            .stApp { background-color: #000000 !important; color: #FFFFFF !important; }
+            h1, h2, h3, p, label, div { color: #FFFF00 !important; font-family: Arial, sans-serif !important; }
+            .stButton>button { background-color: #FFFF00 !important; color: #000000 !important; border: 3px solid #FFFFFF !important; }
+            select, input { background-color: #333333 !important; color: #FFFF00 !important; }
+            </style>
+        """, unsafe_allow_html=True)
+
+    # Logos institucionales obligatorios de la plantilla
     marca.logos()
-    st.title(cfg["titulo_app"])
-    st.caption("Desafío 3 · Ciudadanía informada · Hackathon IA Aplicada · Congreso Social UC 2026")
+    
+    # ---------------------------------------------------------
+    # 🏛️ 2. ENCABEZADO SIMBÓLICO (La Moneda y Legado Cívico)
+    # ---------------------------------------------------------
+    st.title("🏛️ Puerta Cívica: Tu Entrada a la Democracia")
+    
+    st.markdown("""
+    <div style='background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #1f77b4; margin-bottom: 20px;'>
+        <p style='margin: 0; font-style: italic; color: #333333;'>
+            "La Moneda es el máximo símbolo de nuestra democracia, un espacio que pertenece a todos los ciudadanos."
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.caption("✨ *'Los jóvenes no son el futuro, son el momento presente de nuestra democracia.'* — Inspirado en el legado de San Alberto Hurtado.")
     salvaguardas.mostrar_aviso()
 
+    # Validación de ingreso del equipo oficial
     equipo = salvaguardas.ingresar_equipo()
     if not equipo:
         st.stop()
 
     st.write(cfg["texto_bienvenida"])
     st.caption("📱 En celular, la configuración del equipo está en el menú » de arriba a la izquierda.")
-    corpus = corpus_del_equipo(cargar_corpus())
+    
+    # ---------------------------------------------------------
+    # 🎒 3. FILTRO ADAPTATIVO: MOMENTO DE VIDA (Edad)
+    # ---------------------------------------------------------
+    st.write("---")
+    st.subheader("1. Identifica tu perfil ciudadano")
+    perfil = st.radio(
+        "Selecciona tu momento de vida actual para adaptar las explicaciones de la IA:",
+        ["🎒 Escolar (Enseñanza Media / Menor de 18)", 
+         "🎓 Universitario o Técnico (Educación Superior)", 
+         "💼 Joven Laboral o Cesante (Buscando empleo / Emprendiendo)"],
+        index=0
+    )
+    
+    # Guardamos el perfil en el session_state para que el backend lo pueda leer en tono.py
+    st.session_state["perfil_usuario"] = "escolar" if "🎒" in perfil else "universitario" if "🎓" in perfil else "laboral"
 
+    # ---------------------------------------------------------
+    # 🌿 4. LLUVIA DE IDEAS: CATEGORÍAS DE INTERÉS
+    # ---------------------------------------------------------
+    st.subheader("2. ¿Qué causas te mueven hoy?")
+    col1, col2, col3 = st.columns(3)
+    
+    if 'categoria_seleccionada' not in st.session_state:
+        st.session_state.categoria_seleccionada = "ecologia" # Valor inicial por defecto
+
+    with col1:
+        if st.button("🌿 Ecología y Medioambiente", use_container_width=True):
+            st.session_state.categoria_seleccionada = "ecologia"
+    with col2:
+        if st.button("📚 Educación y Cultura", use_container_width=True):
+            st.session_state.categoria_seleccionada = "educacion"
+    with col3:
+        if st.button("💼 Trabajo y Oportunidades", use_container_width=True):
+            st.session_state.categoria_seleccionada = "trabajo"
+
+    st.markdown(f"Filtrando proyectos sobre: **{st.session_state.categoria_seleccionada.capitalize()}**")
+
+    # Carga original del corpus de leyes de la plantilla
+    corpus = corpus_del_equipo(cargar_corpus())
     leyes = corpus.drop_duplicates("id_ley").set_index("id_ley")
-    id_ley = st.selectbox("Ley", leyes.index.tolist(),
+    
+    # Selector de Leyes (El usuario elige la ley dentro del sistema cerrado)
+    id_ley = st.selectbox("Selecciona el documento oficial que deseas que la IA traduzca:", leyes.index.tolist(),
                           format_func=lambda i: _etiqueta_ley(leyes, i))
     ley = corpus[corpus["id_ley"] == id_ley]
 
-    pregunta = st.text_input("¿Tienes una pregunta específica sobre esta ley? (opcional)",
-                             placeholder="Ej: ¿Me pueden multar si...?")
+    # Ajustar el placeholder dinámico según la edad del usuario
+    if st.session_state["perfil_usuario"] == "escolar":
+        placeholder_dinamico = "Ej: ¿Cómo afecta esto a mi colegio o barrio en palabras simples?"
+    elif st.session_state["perfil_usuario"] == "universitario":
+        placeholder_dinamico = "Ej: ¿Qué artículos regulan mis derechos o prácticas en este proyecto?"
+    else:
+        placeholder_dinamico = "Ej: ¿Qué beneficios prácticos, plazos o subsidios económicos entrega esta ley?"
 
+    pregunta = st.text_input("¿Tienes una pregunta específica sobre esta ley? (opcional)",
+                             placeholder=placeholder_dinamico)
+
+    # ---------------------------------------------------------
+    # DESDE AQUÍ SE MANTIENE EL CÓDIGO ORIGINAL SIN CAMBIOS
+    # ---------------------------------------------------------
     texto_boton = cfg["texto_boton"]
     if es_proyecto(ley.iloc[0]) and texto_boton == DEFECTOS["texto_boton"]:
         texto_boton = "Explicar proyecto"
@@ -428,13 +511,12 @@ def main():
     if "ultimo_b" in st.session_state:
         r, frases, descartadas, id_ult, mensaje, id_consulta = (list(st.session_state["ultimo_b"]) + [""])[:6]
         ley_ult = corpus[corpus["id_ley"] == id_ult]
-        if ley_ult.empty:  # la ley fue quitada de la Sheet después de consultarla
+        if ley_ult.empty:  
             st.session_state.pop("ultimo_b")
         else:
             st.divider()
             mostrar_resultado(r, frases, descartadas, ley_ult)
 
-            # Verificación humana: ¿se entendió? (queda registrada como indicador). Solo si hubo explicación.
             if frases and not r["fuera_de_alcance"]:
                 st.divider()
                 claridad = st.radio("¿Te quedó clara la explicación?",

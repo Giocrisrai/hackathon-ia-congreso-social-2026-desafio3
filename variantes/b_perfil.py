@@ -152,7 +152,8 @@ def _categoria(valor: str) -> str:
         return "educacion"
     if t in ("ecologia", "medio ambiente", "ambiental", "humedal", "humedales"):
         return "ecologia"
-    if "humedal" in t or "ambiental" in t or "medio ambiente" in t:
+    if any(p in t for p in ("humedal", "ambiental", "medio ambiente", "bolsa", "plastica",
+                            "plastico", "residuo", "reciclaje", "ecolog")):
         return "ecologia"
     if "practica" in t or "educacion" in t or "formacion" in t:
         return "educacion"

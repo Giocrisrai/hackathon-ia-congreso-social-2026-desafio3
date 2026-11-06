@@ -38,7 +38,7 @@ Para probar la app local, copiar `.streamlit/secrets.example.toml` a `.streamlit
 | **Objetivo** | Cargar las 3 normas y demostrar que las citas son trazables | Adaptar la explicación por perfil y dejar el flujo ético listo |
 | **Archivos que posee** | `datos/b_leyes.csv`, `datos/b_diccionario.md`, `pruebas/test_corpus.py`, `docs/fuentes_3_normas.md` | `variantes/b_ley_simple.py`, `variantes/b_perfil.py`, `pruebas/test_perfil.py` |
 | **No toca** | `variantes/b_ley_simple.py` ni `nucleo/` | `datos/` ni `nucleo/` |
-| **Entregable principal** | 3 normas cargadas + tests de corpus + preguntas de prueba | Selector de perfil + prompt adaptativo + bloque de dignidad + log con perfil |
+| **Entregable principal** | 3 normas cargadas + tests de corpus + preguntas de prueba | Integración del perfil que manda el frontend (sin duplicar el selector) + prompt adaptativo + bloque de dignidad + log con perfil |
 
 ### Archivos que nadie toca
 
@@ -155,18 +155,15 @@ Cambios mínimos:
    from variantes import b_perfil
    ```
 
-2. Agregar el selector de perfil en `main()`:
+2. Leer el perfil que deja el frontend y normalizarlo. **No agregar un segundo selector**, porque la 3ra persona ya tiene el radio de perfil y deja el valor en `st.session_state["perfil_usuario"]`:
 
    ```python
-   perfil = st.selectbox(
-       "¿Cuál es tu perfil?",
-       b_perfil.PERFILES,
-       index=b_perfil.PERFILES.index(b_perfil.normalizar_perfil(cfg.get("perfil", ""))),
+   perfil = b_perfil.normalizar_perfil(
+       st.session_state.get("perfil_usuario", cfg.get("perfil", ""))
    )
-   perfil = b_perfil.normalizar_perfil(perfil)
    ```
 
-   Si se quiere que la planilla también pueda fijar el perfil, agregar `"perfil": "Escolar"` a `DEFECTOS`. Es opcional; el selector ya cumple la función.
+   Si no hay frontend o no hay valor, `normalizar_perfil("")` cae en `"Escolar"`. Si se quiere que la planilla también pueda fijar el perfil, agregar `"perfil": "Escolar"` a `DEFECTOS`; es opcional.
 
 3. Pasar el perfil a `armar_sistema()` y a `explicar()`:
 
@@ -183,27 +180,32 @@ Cambios mínimos:
 
 4. Pasar el perfil también en el reintento y en la llamada a `tono.aplicar` si corresponde. El tono del equipo sigue mandando sobre el estilo; el perfil cambia ejemplos y enfoque, no hechos.
 
-5. Mostrar el bloque de dignidad después de la explicación:
+5. Mostrar el bloque de dignidad después de la explicación. La categoría la deja el frontend en `st.session_state["categoria_seleccionada"]` (o `None` si eligió “Todas”):
 
    ```python
    bloque = b_perfil.bloque_dignidad_desde_frases(
        ley.iloc[0]["nombre_ley"],
        frases,
-       categoria=b_perfil.inferir_categoria(ley.iloc[0]["nombre_ley"]),
+       categoria=(st.session_state.get("categoria_seleccionada")
+                  or b_perfil.inferir_categoria(ley.iloc[0]["nombre_ley"])),
    )
    st.markdown(bloque)
    ```
 
    El bloque es determinista: no agrega cifras, organismos ni beneficios nuevos, y cita los mismos artículos que las frases validadas. Si no hay frases, no mostrar el bloque.
 
-6. Incluir el perfil en el registro:
+6. Incluir el perfil y la categoría en la firma de repetición y en el registro:
 
    ```python
-   entrada = f"{id_ley} | {perfil} | {mensaje}"
+   categoria = st.session_state.get("categoria_seleccionada")
+   firma = f"B|{id_ley}|{perfil}|{categoria or 'todas'}|{pregunta.strip()}"
+
+   entrada = f"{id_ley} | {perfil} | {categoria or 'todas'} | {mensaje}"
    salida = json.dumps({
        "fuera_de_alcance": r["fuera_de_alcance"],
        "motivo": r.get("motivo", ""),
        "perfil": perfil,
+       "categoria": categoria or "todas",
        "frases": frases,
        "descartadas": descartadas,
    }, ensure_ascii=False)
@@ -289,7 +291,7 @@ bloque = b_perfil.bloque_dignidad_desde_frases(nombre_ley, frases, categoria)
 | Bloque | Persona A | Persona B | Checkpoint |
 |---|---|---|---|
 | **0:00–0:15** | Entorno, tests base, rama, revisar CSV | Entorno, tests base, rama, revisar `b_ley_simple.py` | Ambos con tests verdes |
-| **0:15–1:15** | Cargar la primera norma + `test_corpus.py` | Integrar selector + `instrucciones_perfil()` | La app importa y el prompt muestra el perfil |
+| **0:15–1:15** | Cargar la primera norma + `test_corpus.py` | Leer `perfil_usuario` del frontend + `instrucciones_perfil()` | La app importa y el prompt muestra el perfil |
 | **1:15–1:30** | Revisión cruzada del prompt | Revisión cruzada del CSV | **Checkpoint 1:** merge a `dev` |
 | **1:30–2:15** | Cargar las otras 2 normas + preguntas + evidencia de log | Bloque de dignidad + log con perfil + pruebas | Tests nuevos verdes |
 | **2:15–2:30** | Corregir datos según pruebas | Corregir prompt según pruebas | **Checkpoint 2:** merge final |

@@ -86,6 +86,7 @@ def test_bloque_dignidad_categoria_trabajo():
 
 def test_inferir_categoria():
     assert P.inferir_categoria("Ley 21.202 · Protección de Humedales Urbanos") == "ecologia"
+    assert P.inferir_categoria("Ley 21.100 · Prohíbe la entrega de bolsas plásticas") == "ecologia"
     assert P.inferir_categoria("Ley 21.165 · Jornada parcial para estudiantes trabajadores") == "trabajo"
     assert P.inferir_categoria("Código del Trabajo · Artículo 8 sobre práctica profesional") == "educacion"
     assert P.inferir_categoria("Ley X") == "generico"
